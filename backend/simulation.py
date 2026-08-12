@@ -243,7 +243,9 @@ def simulate_tick(tick: int = 0, shock: str | None = None) -> dict:
 def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
     layout = load_layout()
     lookup = _zone_lookup()
-    zone = lookup.get(zone_id, lookup["port_hercule_promenade"])
+    if zone_id not in lookup:
+        zone_id = "port_hercule_promenade"
+    zone = lookup[zone_id]
 
     # Shortest path by distance through the venue graph to Fontvieille egress.
     graph: dict[str, list[tuple[str, float]]] = {}
@@ -281,17 +283,19 @@ def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
     if not path or path[0] != zone_id:
         path = [zone_id, "port_hercule_promenade", target]
 
-    shortest_distance = sum(
-        edge["distance_m"]
-        for edge in layout["edges"]
-        if {edge["from"], edge["to"]} == {path[0], path[1]}
-    ) or 400
+    edge_map: dict[tuple[str, str], float] = {}
+    for edge in layout["edges"]:
+        edge_map[(edge["from"], edge["to"])] = edge["distance_m"]
+        edge_map[(edge["to"], edge["from"])] = edge["distance_m"]
+
+    total_dist = sum(edge_map.get((u, v), 0.0) for u, v in zip(path[:-1], path[1:]))
+    shortest_distance = round(total_dist) if total_dist > 0 else 400
 
     alternate_distance = shortest_distance + 80
     exposure_reduction = 63 if zone_id == "port_hercule_promenade" else 48
     walking_delta = 18 if zone_id == "port_hercule_promenade" else 24
 
-    readable = " → ".join(lookup[node]["name"].split(" - ")[0] for node in path)
+    readable = " -> ".join(lookup[n]["name"].split(" - ")[0] for n in path)
 
     return {
         "from_zone": zone_id,
@@ -299,7 +303,7 @@ def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
         "recommended_path": path,
         "recommended": readable,
         "tradeoff": f"+{walking_delta} sec walking time",
-        "exposure_reduction": f"−{exposure_reduction}% crowd exposure",
+        "exposure_reduction": f"-{exposure_reduction}% crowd exposure",
         "shortest_distance_m": shortest_distance,
         "recommended_distance_m": alternate_distance,
         "reason": (

@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from simulation import (
+    emergency_status,
     load_layout,
     recommend_route,
     simulate_tick,
@@ -23,6 +24,33 @@ RISK_COLORS = {
 }
 GUARDIAN_RED = "#E4002B"
 TICK_SECONDS = 2
+
+TOUR_STEPS = [
+    {
+        "title": "Digital Twin Map",
+        "copy": "This is your live venue view — each zone updates as crowd conditions change.",
+    },
+    {
+        "title": "Risk Tier Legend",
+        "copy": "Color here means risk, not just crowd size. A busy area can be safer than a smaller blocked one.",
+    },
+    {
+        "title": "Prediction Alert Banner",
+        "copy": "When trouble is coming, you'll see it here with a countdown before it happens.",
+    },
+    {
+        "title": "Zone / Bottleneck Marker",
+        "copy": "Click any zone to see exactly why it's at risk.",
+    },
+    {
+        "title": "Decision Timeline Panel",
+        "copy": "Every recommendation the system makes is logged here, in order.",
+    },
+    {
+        "title": "What-If / Emergency Controls",
+        "copy": "Test a scenario or trigger Emergency Mode from here.",
+    },
+]
 
 st.set_page_config(
     page_title="AI Crowd Guardian",
@@ -46,6 +74,12 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] {
   font-family: 'Titillium Web', sans-serif; font-size: 1.45rem;
 }
 .stAlert { border-left: 3px solid #E4002B; }
+.tour-card {
+  background: #16161b; border: 2px solid #E4002B; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;
+}
+.emergency-panel {
+  background: #250e12; border: 2px solid #FF3B30; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -61,6 +95,9 @@ def _init_state() -> None:
         "timeline": [],
         "last_highest_risk": None,
         "last_shock": None,
+        "emergency_mode": False,
+        "tour_step": 0,
+        "tour_seen": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -219,17 +256,18 @@ def _build_twin_figure(snapshot: dict, selected_zone_id: str, route: dict) -> go
 def main() -> None:
     _init_state()
 
-    col_title, col_controls = st.columns([3, 2])
+    col_title, col_controls = st.columns([2.5, 2.5])
     with col_title:
         st.title("AI Crowd Guardian")
         st.caption("Predictive crowd-safety desk — Monaco Grand Prix venue")
+
     with col_controls:
-        ctrl1, ctrl2, ctrl3 = st.columns(3)
+        ctrl1, ctrl2, ctrl3, ctrl4, ctrl5 = st.columns([1, 1, 1.2, 1, 1])
         with ctrl1:
-            running = st.toggle("Live feed", value=st.session_state.running)
+            running = st.toggle("Live", value=st.session_state.running)
             st.session_state.running = running
         with ctrl2:
-            if st.button("Reset tick"):
+            if st.button("Reset"):
                 st.session_state.tick = 0
                 st.session_state.timeline = []
                 st.session_state.last_highest_risk = None
@@ -244,6 +282,52 @@ def main() -> None:
                 label_visibility="collapsed",
             )
             st.session_state.shock = None if shock_choice == "baseline" else shock_choice
+        with ctrl4:
+            em_active = st.session_state.emergency_mode
+            if st.button("🚨 Emergency", type="primary" if em_active else "secondary"):
+                st.session_state.emergency_mode = not em_active
+                st.rerun()
+        with ctrl5:
+            if st.button("❓ Help"):
+                st.session_state.tour_step = 1
+                st.rerun()
+
+    # Onboarding Tour step render (PRD Section 7)
+    if st.session_state.tour_step > 0:
+        step_idx = st.session_state.tour_step - 1
+        step_info = TOUR_STEPS[step_idx]
+        st.markdown(
+            f"""
+<div class="tour-card">
+  <div style="font-weight:700; color:#E4002B; font-size:1.1rem">
+    Onboarding Tour — Step {st.session_state.tour_step} of {len(TOUR_STEPS)}: {step_info['title']}
+  </div>
+  <div style="color:#F5F5F7; margin-top:0.4rem; font-size:0.95rem">
+    {step_info['copy']}
+  </div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        tc1, tc2, tc3, _ = st.columns([1, 1, 1, 5])
+        with tc1:
+            if st.button("Previous", disabled=(st.session_state.tour_step == 1)):
+                st.session_state.tour_step -= 1
+                st.rerun()
+        with tc2:
+            next_label = "Finish" if st.session_state.tour_step == len(TOUR_STEPS) else "Next"
+            if st.button(next_label):
+                if st.session_state.tour_step == len(TOUR_STEPS):
+                    st.session_state.tour_step = 0
+                    st.session_state.tour_seen = True
+                else:
+                    st.session_state.tour_step += 1
+                st.rerun()
+        with tc3:
+            if st.button("Skip Tour"):
+                st.session_state.tour_step = 0
+                st.session_state.tour_seen = True
+                st.rerun()
 
     tick = st.session_state.tick
     shock = st.session_state.shock
@@ -253,6 +337,36 @@ def main() -> None:
     _append_timeline(snapshot, route)
 
     highest = max(snapshot["zone_states"], key=lambda z: z["risk_score"])
+
+    # Emergency Mode Panel (PRD Section 6.8 & 8.5)
+    if st.session_state.emergency_mode:
+        em_data = emergency_status(tick, shock)
+        st.markdown(
+            f"""
+<div class="emergency-panel">
+  <div style="font-weight:700; color:#FF3B30; font-size:1.1rem; display:flex; align-items:center; gap:0.5rem">
+    🚨 EMERGENCY EVACUATION MODE ACTIVE
+  </div>
+  <div style="color:#F5F5F7; margin-top:0.4rem; font-size:1rem; font-weight:600">
+    Recommendation: {em_data['recommendation']}
+  </div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+        em_cols = pd.DataFrame(
+            [
+                {
+                    "Exit / Egress Point": e["name"],
+                    "Capacity/min": f"{e['capacity_per_min']:,}",
+                    "Throughput/min": f"{e['current_throughput']:,}",
+                    "Capacity Utilization": f"{int(e['utilization'] * 100)}%",
+                    "Risk Tier": _risk_label(e["risk_tier"]),
+                }
+                for e in em_data["exits"]
+            ]
+        )
+        st.dataframe(em_cols, hide_index=True, use_container_width=True)
 
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Simulated crowd", f"{snapshot['simulated_crowd']:,}")
@@ -381,7 +495,7 @@ def main() -> None:
                 "Congestion in": _format_countdown(z["predicted_congestion_in_sec"]),
                 "Top factor": z["top_factors"][0]["cause"] if z["top_factors"] else "—",
             }
-            for z in sorted(snapshot["zone_states"], key=lambda item: -item["risk_score"])
+        for z in sorted(snapshot["zone_states"], key=lambda item: -item["risk_score"])
         ]
     )
     st.dataframe(table, hide_index=True, use_container_width=True)
@@ -394,3 +508,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
