@@ -121,6 +121,7 @@ function App() {
   ]);
   const [apiOnline, setApiOnline] = useState(true);
   const [tour, setTour] = useState(null);
+  const [showPersonas, setShowPersonas] = useState(true);
 
   const tickRef = useRef(tick);
   tickRef.current = tick;
@@ -197,6 +198,20 @@ function App() {
     }
   };
 
+  const runCommand = async (q) => {
+    if (!q || !q.trim()) return;
+    setCmdQuery(q);
+    setCmdLoading(true);
+    try {
+      const r = await postCommander(q, tick, shock);
+      setCmdResult(r.answer);
+    } catch {
+      setCmdResult("Commander unavailable — check backend connection.");
+    } finally {
+      setCmdLoading(false);
+    }
+  };
+
   // ── Inject shock ──
   const inject = (id) => {
     const s = id === "baseline" ? null : id;
@@ -209,6 +224,19 @@ function App() {
   const pushLog = (kind, title, body) => {
     const time = new Date().toISOString().substring(11, 19);
     setLog((prev) => [{ time, kind, title, body }, ...prev].slice(0, 6));
+  };
+
+  // ── Persona visuals (client-side only) ──
+  const personaList = [
+    { id: "spectator", color: "#7bd389", label: "Spectator" },
+    { id: "vip", color: "#ffd173", label: "VIP" },
+    { id: "wheelchair", color: "#6ec6ff", label: "Accessible" },
+    { id: "staff", color: "#ff9fb6", label: "Staff" },
+  ];
+  const getPersonaForZone = (z) => {
+    const seed = z.zone_id.split("").reduce((s, c) => s + c.charCodeAt(0), 0);
+    const idx = Math.abs((seed + Math.round((z.density_norm || 0) * 100) + tick) % personaList.length);
+    return personaList[idx];
   };
 
   // ── Accept recommendation ──
@@ -305,6 +333,46 @@ function App() {
             ))}
           </section>
 
+          <section className="personas" style={{ marginTop: 14 }}>
+            <span className="eyebrow">PERSONA VISUALS</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                <input type="checkbox" checked={showPersonas} onChange={(e) => setShowPersonas(e.target.checked)} />
+                Show personas
+              </label>
+              <div className="persona-legend" style={{ marginLeft: 'auto' }}>
+                <div className="persona-legend-items">
+                  {personaList.map((p) => (
+                    <div key={p.id} className="persona-legend-item">
+                      <span className="persona-swatch" style={{ background: p.color }} />
+                      <small className="persona-label">{p.label}</small>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Persona distribution summary */}
+              <div className="persona-counts" aria-hidden style={{ marginTop: 8 }}>
+                {(function () {
+                  const map = {};
+                  zones?.forEach((z) => {
+                    const p = getPersonaForZone(z).id;
+                    map[p] = (map[p] || 0) + 1;
+                  });
+                  return (
+                    <div className="persona-counts-inner">
+                      {personaList.map((p) => (
+                        <div key={p.id} className="persona-count-item">
+                          <span className="persona-swatch" style={{ background: p.color }} />
+                          <small className="persona-count-number">{map[p.id] || 0}</small>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </section>
+
           {/* ── Telemetry Commander ── */}
           <section className="commander-section" data-tour="commander">
             <span className="eyebrow">💬 TELEMETRY COMMANDER</span>
@@ -324,6 +392,17 @@ function App() {
                 {cmdResult}
               </div>
             )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              {[
+                { q: 'highest risk area?', label: 'Highest risk' },
+                { q: 'why is Port Hercule at risk?', label: 'Why Port Hercule?' },
+                { q: 'safest route from highest risk?', label: 'Safest route' },
+              ].map((c) => (
+                <button key={c.q} onClick={() => runCommand(c.q)} style={{ background: '#15151a', border: '1px solid var(--line)', padding: '6px 8px', fontSize: 11 }}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
           </section>
 
           <footer>● NO LIVE CAMERAS · SYNTHETIC INPUT</footer>
@@ -346,95 +425,48 @@ function App() {
 
           <div className="twin" data-tour="twin">
             <div className="map-label top">MONACO GP / PEDESTRIAN FLOW <b>LIVE</b></div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-
-              {/* ── Monaco Circuit Track Outline (accurate clockwise trace) ── */}
-              {/*
-                Key corners:
-                Sainte Devote (24,54) → Beau Rivage uphill → Casino (35,16)
-                → Mirabeau (50,27) → Loews hairpin (62,35) → Portier (72,44)
-                → Tunnel (78,51) → exit (85,56) → Nouvelle Chicane (82,64)
-                → Pool (78,68) → La Rascasse (66,77) → Anthony Noghes (56,80)
-                → Start/Finish straight → Le Rocher area → back to Sainte Devote
-              */}
-              <polyline
-                className="track-outline"
-                points="
-                  24,54
-                  20,47 18,39 20,28 27,19 35,16
-                  44,20 50,27
-                  57,31 62,35
-                  67,38 72,43 74,48
-                  78,51 80,53
-                  84,55 85,58 84,62
-                  82,65 80,68 78,70
-                  74,73 70,76 66,77
-                  60,79 56,80
-                  48,79 40,79 32,77
-                  24,74 19,70 13,65
-                  11,60 13,56 18,54 24,54
-                "
-              />
-
-              {/* ── Start/Finish line marker ── */}
-              <line x1="46" y1="79" x2="46" y2="75" className="start-finish-line" />
-              <text x="46" y="73" className="map-annotation sf-label">S/F</text>
-
-              {/* ── Harbour water (Port Hercule, southeast of circuit) ── */}
-              <ellipse cx="74" cy="65" rx="10" ry="6" className="harbour-fill" />
-              <text x="74" y="66" className="map-annotation">PORT HERCULE</text>
-
-              {/* ── Pedestrian edges from venue_layout.json ── */}
-              {data.layout?.edges?.map((e, i) => {
-                const from = zones.find((z) => z.zone_id === e.from);
-                const to   = zones.find((z) => z.zone_id === e.to);
-                if (!from || !to) return null;
-                // Color edge by avg risk of its two endpoints
-                const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
-                const edgeTone = avgRisk > 80 ? "edge-critical"
-                               : avgRisk > 60 ? "edge-intervention"
-                               : avgRisk > 30 ? "edge-monitor"
-                               : "edge-safe";
-                const isHotPath =
-                  (route?.recommended_path || []).includes(e.from) &&
-                  (route?.recommended_path || []).includes(e.to);
-                return (
-                  <line
-                    key={i}
-                    x1={from.map_x} y1={from.map_y}
-                    x2={to.map_x}   y2={to.map_y}
-                    className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
-                  />
-                );
-              })}
-
-              {/* ── Highest-risk pulsing alert line ── */}
-              {highest && highest.zone_id !== "fontvieille_egress" && (
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              {data.layout?.edges?.map((e, i) => (
+                <line
+                  key={i}
+                  x1={zones.find((z) => z.zone_id === e.from)?.map_x || 50}
+                  y1={zones.find((z) => z.zone_id === e.from)?.map_y || 50}
+                  x2={zones.find((z) => z.zone_id === e.to)?.map_x || 50}
+                  y2={zones.find((z) => z.zone_id === e.to)?.map_y || 50}
+                  className={e.accessible === false ? "edge-inaccessible" : ""}
+                />
+              ))}
+              {/* Highlight highest-risk connector */}
+              {highest && (
                 <line
                   className="hot"
-                  x1={highest.map_x} y1={highest.map_y}
+                  x1={highest.map_x}
+                  y1={highest.map_y}
                   x2="68" y2="87"
                 />
               )}
-
             </svg>
-
-            {/* ── Zone Markers ── */}
-            {zones.map((z) => (
-              <button
-                key={z.zone_id}
-                onClick={() => setSelectedId(z.zone_id)}
-                data-tour={z.zone_id === selectedId ? "zone" : undefined}
-                className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
-                style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
-                aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
-              >
-                <span className="halo" />
-                <b>{z.risk_score}</b>
-                <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
-              </button>
-            ))}
-
+            {zones.map((z) => {
+              const [, ZIcon] = meta(z.risk_tier);
+              return (
+                <button
+                  key={z.zone_id}
+                  onClick={() => setSelectedId(z.zone_id)}
+                  data-tour={z.zone_id === selectedId ? "zone" : undefined}
+                  className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
+                  style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
+                  aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
+                >
+                  <span className="halo" />
+                  {showPersonas && (() => {
+                    const p = getPersonaForZone(z);
+                    return <span className="persona-badge" style={{ background: p.color }} title={p.label} />;
+                  })()}
+                  <b>{z.risk_score}</b>
+                  <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
+                </button>
+              );
+            })}
             <div className="map-label bottom">NORTH ↑ <b>SCHEMATIC VIEW · v1.0.0</b></div>
           </div>
 
