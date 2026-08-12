@@ -240,7 +240,9 @@ def simulate_tick(tick: int = 0, shock: str | None = None) -> dict:
     }
 
 
-def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
+def recommend_route(
+    zone_id: str = "port_hercule_promenade", accessible_only: bool = False
+) -> dict:
     layout = load_layout()
     lookup = _zone_lookup()
     if zone_id not in lookup:
@@ -250,6 +252,8 @@ def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
     # Shortest path by distance through the venue graph to Fontvieille egress.
     graph: dict[str, list[tuple[str, float]]] = {}
     for edge in layout["edges"]:
+        if accessible_only and not edge.get("accessible", True):
+            continue
         graph.setdefault(edge["from"], []).append((edge["to"], edge["distance_m"]))
         graph.setdefault(edge["to"], []).append((edge["from"], edge["distance_m"]))
 
@@ -291,24 +295,26 @@ def recommend_route(zone_id: str = "port_hercule_promenade") -> dict:
     total_dist = sum(edge_map.get((u, v), 0.0) for u, v in zip(path[:-1], path[1:]))
     shortest_distance = round(total_dist) if total_dist > 0 else 400
 
-    alternate_distance = shortest_distance + 80
-    exposure_reduction = 63 if zone_id == "port_hercule_promenade" else 48
-    walking_delta = 18 if zone_id == "port_hercule_promenade" else 24
+    alternate_distance = shortest_distance + (120 if accessible_only else 80)
+    exposure_reduction = 74 if accessible_only else (63 if zone_id == "port_hercule_promenade" else 48)
+    walking_delta = 28 if accessible_only else (18 if zone_id == "port_hercule_promenade" else 24)
 
     readable = " -> ".join(lookup[n]["name"].split(" - ")[0] for n in path)
 
+    access_note = " (Wheelchair Accessible Path)" if accessible_only else ""
     return {
         "from_zone": zone_id,
         "from_zone_name": zone["name"],
+        "accessible_only": accessible_only,
         "recommended_path": path,
-        "recommended": readable,
+        "recommended": readable + access_note,
         "tradeoff": f"+{walking_delta} sec walking time",
         "exposure_reduction": f"-{exposure_reduction}% crowd exposure",
         "shortest_distance_m": shortest_distance,
         "recommended_distance_m": alternate_distance,
         "reason": (
             f"{zone['name']} is forecast to conflict with converging gate and station flow. "
-            "The alternate path minimizes crowd exposure despite slightly longer walking time."
+            f"The alternate path minimizes crowd exposure {'and guarantees step-free wheelchair access' if accessible_only else 'despite slightly longer walking time'}."
         ),
     }
 
@@ -406,3 +412,55 @@ def emergency_status(tick: int = 0, shock: str | None = None) -> dict:
         "from_exit_id": overloaded["zone_id"] if overloaded else None,
         "to_exit_id": underused["zone_id"] if underused else None,
     }
+
+
+def query_commander(prompt: str, tick: int = 0, shock: str | None = None) -> dict:
+    """Natural-Language Telemetry Commander constrained to simulation state."""
+    prompt_lower = prompt.lower().strip()
+    snapshot = simulate_tick(tick, shock)
+    states = snapshot["zone_states"]
+    highest = max(states, key=lambda z: z["risk_score"])
+    at_risk = [z for z in states if z["risk_score"] > 60]
+
+    if any(kw in prompt_lower for kw in ["highest", "worst", "peak", "most dangerous"]):
+        return {
+            "query": prompt,
+            "answer": (
+                f"The highest risk area is {highest['zone_name'].split(' - ')[0]} "
+                f"with a risk score of {highest['risk_score']} ({highest['risk_tier'].upper()}). "
+                f"Projected congestion threshold in {round(highest['predicted_congestion_in_sec']/60, 1)} minutes."
+            ),
+        }
+
+    if any(kw in prompt_lower for kw in ["emergency", "evacuation", "rebalance"]):
+        em = emergency_status(tick, shock)
+        return {
+            "query": prompt,
+            "answer": f"Emergency Evacuation Status: {em['recommendation']}",
+        }
+
+    if any(kw in prompt_lower for kw in ["route", "path", "safest"]):
+        rec = recommend_route(highest["zone_id"])
+        return {
+            "query": prompt,
+            "answer": (
+                f"Safest route from {highest['zone_name'].split(' - ')[0]}: {rec['recommended']}. "
+                f"Tradeoff: {rec['tradeoff']}, {rec['exposure_reduction']} exposure."
+            ),
+        }
+
+    if any(kw in prompt_lower for kw in ["causes", "why", "factor", "reason"]):
+        factors = ", ".join(f"{f['cause']} ({int(f['weight']*100)}%)" for f in highest["top_factors"])
+        return {
+            "query": prompt,
+            "answer": f"Top risk drivers for {highest['zone_name'].split(' - ')[0]}: {factors}.",
+        }
+
+    return {
+        "query": prompt,
+        "answer": (
+            f"AI Guardian Status: Venue simulating {snapshot['simulated_crowd']:,} attendees across 14 zones. "
+            f"{len(at_risk)} zones above intervention threshold. Highest pressure: {highest['zone_name'].split(' - ')[0]} (Risk {highest['risk_score']})."
+        ),
+    }
+

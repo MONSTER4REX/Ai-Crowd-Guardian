@@ -11,6 +11,7 @@ import streamlit as st
 from simulation import (
     emergency_status,
     load_layout,
+    query_commander,
     recommend_route,
     simulate_tick,
     what_if_scenarios,
@@ -21,6 +22,13 @@ RISK_COLORS = {
     "monitor": "#f5c518",
     "intervention": "#ff8c42",
     "critical": "#ff3b30",
+}
+ZONE_SYMBOLS = {
+    "gate": "diamond",
+    "corridor": "circle",
+    "concession": "square",
+    "exit": "hexagon",
+    "field": "star",
 }
 GUARDIAN_RED = "#E4002B"
 TICK_SECONDS = 2
@@ -80,6 +88,9 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] {
 .emergency-panel {
   background: #250e12; border: 2px solid #FF3B30; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;
 }
+.commander-box {
+  background: #121217; border: 1px solid #2a2a32; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem;
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -96,6 +107,7 @@ def _init_state() -> None:
         "last_highest_risk": None,
         "last_shock": None,
         "emergency_mode": False,
+        "accessible_only": False,
         "tour_step": 0,
         "tour_seen": False,
     }
@@ -196,15 +208,16 @@ def _build_twin_figure(snapshot: dict, selected_zone_id: str, route: dict) -> go
             )
         )
 
-    xs, ys, sizes, colors, texts, ids = [], [], [], [], [], []
+    xs, ys, sizes, colors, symbols, texts, ids = [], [], [], [], [], [], []
     for state in states:
         xs.append(state["map_x"])
         ys.append(state["map_y"])
-        sizes.append(12 + state["risk_score"] * 0.35)
+        sizes.append(14 + state["risk_score"] * 0.35)
         colors.append(RISK_COLORS.get(state["risk_tier"], "#92929d"))
+        symbols.append(ZONE_SYMBOLS.get(state["zone_type"], "circle"))
         short_name = state["zone_name"].split(" - ")[0]
         texts.append(
-            f"<b>{short_name}</b><br>"
+            f"<b>{short_name}</b> ({state['zone_type'].upper()})<br>"
             f"Risk: {state['risk_score']} ({_risk_label(state['risk_tier'])})<br>"
             f"Density: {state['density_per_sqm']} /m²<br>"
             f"Congestion in: {_format_countdown(state['predicted_congestion_in_sec'])}"
@@ -216,7 +229,12 @@ def _build_twin_figure(snapshot: dict, selected_zone_id: str, route: dict) -> go
             x=xs,
             y=ys,
             mode="markers+text",
-            marker=dict(size=sizes, color=colors, line=dict(width=2, color="#0a0a0d")),
+            marker=dict(
+                size=sizes,
+                color=colors,
+                symbol=symbols,
+                line=dict(width=2, color="#0a0a0d"),
+            ),
             text=[state["risk_score"] for state in states],
             textposition="middle center",
             textfont=dict(size=9, color="#0a0a0d"),
@@ -332,7 +350,10 @@ def main() -> None:
     tick = st.session_state.tick
     shock = st.session_state.shock
     snapshot = simulate_tick(tick, shock)
-    route = recommend_route(st.session_state.selected_zone_id)
+    route = recommend_route(
+        st.session_state.selected_zone_id,
+        accessible_only=st.session_state.accessible_only,
+    )
     scenarios = what_if_scenarios(tick)
     _append_timeline(snapshot, route)
 
@@ -395,6 +416,25 @@ def main() -> None:
         for tier, color in RISK_COLORS.items():
             st.markdown(
                 f"<span style='color:{color}'>●</span> {_risk_label(tier)}",
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("---")
+        st.markdown("##### 💬 Telemetry Commander")
+        cmd_query = st.text_input(
+            "Ask AI Commander",
+            placeholder="e.g. highest risk, safest route, why sainte devote...",
+            label_visibility="collapsed",
+        )
+        if cmd_query:
+            ans = query_commander(cmd_query, tick, shock)
+            st.markdown(
+                f"""
+<div class="commander-box">
+  <div style="color:#E4002B; font-weight:600; font-size:0.8rem">GUARDIAN COMMANDER</div>
+  <div style="color:#F5F5F7; font-size:0.88rem; margin-top:0.25rem">{ans['answer']}</div>
+</div>
+""",
                 unsafe_allow_html=True,
             )
 
@@ -475,7 +515,15 @@ def main() -> None:
             st.progress(factor["weight"], text=f"{factor['cause']} ({pct}%)")
 
         st.markdown("---")
-        st.subheader("Safest-route recommendation")
+        route_h1, route_h2 = st.columns([2, 1])
+        with route_h1:
+            st.subheader("Safest-route recommendation")
+        with route_h2:
+            acc_toggled = st.checkbox("♿ Step-Free Access", value=st.session_state.accessible_only)
+            if acc_toggled != st.session_state.accessible_only:
+                st.session_state.accessible_only = acc_toggled
+                st.rerun()
+
         st.markdown(f"**{route['recommended']}**")
         st.caption(route["reason"])
         c1, c2 = st.columns(2)
@@ -488,6 +536,7 @@ def main() -> None:
         [
             {
                 "Zone": z["zone_name"].split(" - ")[0],
+                "Type": z["zone_type"].upper(),
                 "Risk": z["risk_score"],
                 "Tier": _risk_label(z["risk_tier"]),
                 "Density (/m²)": z["density_per_sqm"],
@@ -495,7 +544,7 @@ def main() -> None:
                 "Congestion in": _format_countdown(z["predicted_congestion_in_sec"]),
                 "Top factor": z["top_factors"][0]["cause"] if z["top_factors"] else "—",
             }
-        for z in sorted(snapshot["zone_states"], key=lambda item: -item["risk_score"])
+            for z in sorted(snapshot["zone_states"], key=lambda item: -item["risk_score"])
         ]
     )
     st.dataframe(table, hide_index=True, use_container_width=True)
@@ -508,4 +557,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
