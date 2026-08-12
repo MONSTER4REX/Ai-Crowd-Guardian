@@ -346,44 +346,82 @@ function App() {
 
           <div className="twin" data-tour="twin">
             <div className="map-label top">MONACO GP / PEDESTRIAN FLOW <b>LIVE</b></div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-              {data.layout?.edges?.map((e, i) => (
-                <line
-                  key={i}
-                  x1={zones.find((z) => z.zone_id === e.from)?.map_x || 50}
-                  y1={zones.find((z) => z.zone_id === e.from)?.map_y || 50}
-                  x2={zones.find((z) => z.zone_id === e.to)?.map_x || 50}
-                  y2={zones.find((z) => z.zone_id === e.to)?.map_y || 50}
-                  className={e.accessible === false ? "edge-inaccessible" : ""}
-                />
-              ))}
-              {/* Highlight highest-risk connector */}
-              {highest && (
+            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+
+              {/* ── Monaco Circuit Track Outline (schematic, clockwise) ── */}
+              <polyline
+                className="track-outline"
+                points="
+                  27,51
+                  22,44 20,36 22,27 30,20 41,22
+                  50,27 56,30 62,34 65,38
+                  70,43 74,48 76,53
+                  79,58 80,63 77,68 73,67
+                  71,71 68,74 65,78
+                  59,82 55,86 52,88
+                  48,88 44,87 42,84 42,80
+                  38,82 34,82 29,80
+                  22,78 18,78
+                  14,72 13,67 14,64
+                  17,59 22,55 27,51
+                "
+              />
+
+              {/* ── Harbour water fill ── */}
+              <ellipse cx="72" cy="72" rx="14" ry="9" className="harbour-fill" />
+              <text x="70" y="73" className="map-annotation">PORT HERCULE</text>
+
+              {/* ── Pedestrian edges from venue_layout.json ── */}
+              {data.layout?.edges?.map((e, i) => {
+                const from = zones.find((z) => z.zone_id === e.from);
+                const to   = zones.find((z) => z.zone_id === e.to);
+                if (!from || !to) return null;
+                // Color edge by avg risk of its two endpoints
+                const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
+                const edgeTone = avgRisk > 80 ? "edge-critical"
+                               : avgRisk > 60 ? "edge-intervention"
+                               : avgRisk > 30 ? "edge-monitor"
+                               : "edge-safe";
+                const isHotPath =
+                  (route?.recommended_path || []).includes(e.from) &&
+                  (route?.recommended_path || []).includes(e.to);
+                return (
+                  <line
+                    key={i}
+                    x1={from.map_x} y1={from.map_y}
+                    x2={to.map_x}   y2={to.map_y}
+                    className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
+                  />
+                );
+              })}
+
+              {/* ── Highest-risk pulsing alert line ── */}
+              {highest && highest.zone_id !== "fontvieille_egress" && (
                 <line
                   className="hot"
-                  x1={highest.map_x}
-                  y1={highest.map_y}
+                  x1={highest.map_x} y1={highest.map_y}
                   x2="68" y2="87"
                 />
               )}
+
             </svg>
-            {zones.map((z) => {
-              const [, ZIcon] = meta(z.risk_tier);
-              return (
-                <button
-                  key={z.zone_id}
-                  onClick={() => setSelectedId(z.zone_id)}
-                  data-tour={z.zone_id === selectedId ? "zone" : undefined}
-                  className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
-                  style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
-                  aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
-                >
-                  <span className="halo" />
-                  <b>{z.risk_score}</b>
-                  <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
-                </button>
-              );
-            })}
+
+            {/* ── Zone Markers ── */}
+            {zones.map((z) => (
+              <button
+                key={z.zone_id}
+                onClick={() => setSelectedId(z.zone_id)}
+                data-tour={z.zone_id === selectedId ? "zone" : undefined}
+                className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
+                style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
+                aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
+              >
+                <span className="halo" />
+                <b>{z.risk_score}</b>
+                <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
+              </button>
+            ))}
+
             <div className="map-label bottom">NORTH ↑ <b>SCHEMATIC VIEW · v1.0.0</b></div>
           </div>
 
