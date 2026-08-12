@@ -9,8 +9,8 @@
       "type": "gate",
       "capacity_per_min": 900,
       "accessible": false,
-      "map_x": 14,
-      "map_y": 64,
+      "map_x": 12,
+      "map_y": 65,
       "notes": "Entrance for Le Rocher, a hillside general-admission viewing area outside the circuit itself."
     },
     {
@@ -19,8 +19,8 @@
       "type": "corridor",
       "capacity_per_min": 600,
       "accessible": false,
-      "map_x": 27,
-      "map_y": 51,
+      "map_x": 24,
+      "map_y": 54,
       "notes": "Circuit's narrowest, most accident-prone corner. Pinch point between Gate 1 / Zone Z crowds and the harbour-side grandstands."
     },
     {
@@ -29,9 +29,9 @@
       "type": "field",
       "capacity_per_min": 1200,
       "accessible": false,
-      "map_x": 19,
-      "map_y": 34,
-      "notes": "Unreserved standing zone near the Tabac corner, close to Sainte Devote."
+      "map_x": 15,
+      "map_y": 40,
+      "notes": "Unreserved standing zone on the hillside near the uphill Beau Rivage section, close to Sainte Devote."
     },
     {
       "id": "monaco_train_station",
@@ -39,8 +39,8 @@
       "type": "corridor",
       "capacity_per_min": 2500,
       "accessible": true,
-      "map_x": 69,
-      "map_y": 17,
+      "map_x": 76,
+      "map_y": 14,
       "notes": "Largest single crowd-injection point. Feeds directly into Gate 8 via a pedestrian tunnel. Strong candidate for a 'train arrival' shock event."
     },
     {
@@ -49,8 +49,8 @@
       "type": "gate",
       "capacity_per_min": 1100,
       "accessible": true,
-      "map_x": 75,
-      "map_y": 31,
+      "map_x": 72,
+      "map_y": 35,
       "notes": "Below the train station stairs. Grandstand K overlooks Port Hercule between the Tabac corner and the Piscine chicane."
     },
     {
@@ -59,8 +59,8 @@
       "type": "gate",
       "capacity_per_min": 900,
       "accessible": true,
-      "map_x": 86,
-      "map_y": 47,
+      "map_x": 83,
+      "map_y": 52,
       "notes": "Second entrance for the K grandstand, closer to the Louis Chiron / Piscine chicane end."
     },
     {
@@ -69,8 +69,8 @@
       "type": "corridor",
       "capacity_per_min": 1800,
       "accessible": true,
-      "map_x": 64,
-      "map_y": 55,
+      "map_x": 60,
+      "map_y": 54,
       "notes": "Main pedestrian spine along the harbour, connecting Gates 2, 7 and 8 and Grandstands K, N, O, P, V. Highest-traffic corridor in the venue - primary bottleneck candidate."
     },
     {
@@ -79,8 +79,8 @@
       "type": "gate",
       "capacity_per_min": 1000,
       "accessible": true,
-      "map_x": 83,
-      "map_y": 69,
+      "map_x": 80,
+      "map_y": 67,
       "notes": "Harbourfront grandstands built over the water, facing the Piscine (swimming pool) section."
     },
     {
@@ -89,8 +89,8 @@
       "type": "field",
       "capacity_per_min": 700,
       "accessible": true,
-      "map_x": 41,
-      "map_y": 22,
+      "map_x": 35,
+      "map_y": 16,
       "notes": "Viewing area at the Casino corner. High footfall from cafes, restaurants and the fan zone walk."
     },
     {
@@ -99,8 +99,8 @@
       "type": "concession",
       "capacity_per_min": 1500,
       "accessible": true,
-      "map_x": 47,
-      "map_y": 38,
+      "map_x": 46,
+      "map_y": 40,
       "notes": "Free public fan zone with big screen, food and drink. No ticket required, so inflow is the least predictable zone in the venue."
     },
     {
@@ -109,8 +109,8 @@
       "type": "gate",
       "capacity_per_min": 800,
       "accessible": true,
-      "map_x": 55,
-      "map_y": 75,
+      "map_x": 56,
+      "map_y": 76,
       "notes": "Entrance near the Nouvelle Chicane / pit straight hospitality stands."
     },
     {
@@ -119,9 +119,9 @@
       "type": "gate",
       "capacity_per_min": 700,
       "accessible": false,
-      "map_x": 37,
-      "map_y": 82,
-      "notes": "Entrance on Rue Princess Caroline."
+      "map_x": 38,
+      "map_y": 80,
+      "notes": "Entrance on Rue Princess Caroline along the start/finish straight."
     },
     {
       "id": "gate_5_grandstand_l",
@@ -129,8 +129,8 @@
       "type": "gate",
       "capacity_per_min": 650,
       "accessible": true,
-      "map_x": 18,
-      "map_y": 78,
+      "map_x": 20,
+      "map_y": 72,
       "notes": "Grandstand L overlooks the exit of the Piscine chicane, facing Le Rocher."
     },
     {
@@ -139,8 +139,8 @@
       "type": "exit",
       "capacity_per_min": 2200,
       "accessible": true,
-      "map_x": 68,
-      "map_y": 87,
+      "map_x": 58,
+      "map_y": 89,
       "notes": "Main post-event egress route away from the harbour, toward parking and the Fontvieille district."
     }
   ],
