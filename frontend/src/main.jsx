@@ -348,28 +348,41 @@ function App() {
             <div className="map-label top">MONACO GP / PEDESTRIAN FLOW <b>LIVE</b></div>
             <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
 
-              {/* ── Monaco Circuit Track Outline (schematic, clockwise) ── */}
+              {/* ── Monaco Circuit Track Outline (accurate clockwise trace) ── */}
+              {/*
+                Key corners:
+                Sainte Devote (24,54) → Beau Rivage uphill → Casino (35,16)
+                → Mirabeau (50,27) → Loews hairpin (62,35) → Portier (72,44)
+                → Tunnel (78,51) → exit (85,56) → Nouvelle Chicane (82,64)
+                → Pool (78,68) → La Rascasse (66,77) → Anthony Noghes (56,80)
+                → Start/Finish straight → Le Rocher area → back to Sainte Devote
+              */}
               <polyline
                 className="track-outline"
                 points="
-                  27,51
-                  22,44 20,36 22,27 30,20 41,22
-                  50,27 56,30 62,34 65,38
-                  70,43 74,48 76,53
-                  79,58 80,63 77,68 73,67
-                  71,71 68,74 65,78
-                  59,82 55,86 52,88
-                  48,88 44,87 42,84 42,80
-                  38,82 34,82 29,80
-                  22,78 18,78
-                  14,72 13,67 14,64
-                  17,59 22,55 27,51
+                  24,54
+                  20,47 18,39 20,28 27,19 35,16
+                  44,20 50,27
+                  57,31 62,35
+                  67,38 72,43 74,48
+                  78,51 80,53
+                  84,55 85,58 84,62
+                  82,65 80,68 78,70
+                  74,73 70,76 66,77
+                  60,79 56,80
+                  48,79 40,79 32,77
+                  24,74 19,70 13,65
+                  11,60 13,56 18,54 24,54
                 "
               />
 
-              {/* ── Harbour water fill ── */}
-              <ellipse cx="72" cy="72" rx="14" ry="9" className="harbour-fill" />
-              <text x="70" y="73" className="map-annotation">PORT HERCULE</text>
+              {/* ── Start/Finish line marker ── */}
+              <line x1="46" y1="79" x2="46" y2="75" className="start-finish-line" />
+              <text x="46" y="73" className="map-annotation sf-label">S/F</text>
+
+              {/* ── Harbour water (Port Hercule, southeast of circuit) ── */}
+              <ellipse cx="74" cy="65" rx="10" ry="6" className="harbour-fill" />
+              <text x="74" y="66" className="map-annotation">PORT HERCULE</text>
 
               {/* ── Pedestrian edges from venue_layout.json ── */}
               {data.layout?.edges?.map((e, i) => {

@@ -254,6 +254,9 @@ svg { width: 16px; height: 16px; stroke-width: 1.8 }
 
 /* ── Hot alert line ── */
 .twin line.hot { stroke: var(--red); stroke-width: 2; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 5px #e4002baa) }
+/* ── Start/Finish line ── */
+.start-finish-line { stroke: #e4002b; stroke-width: 1.5; vector-effect: non-scaling-stroke }
+.sf-label { fill: var(--red) !important; font-size: 2.5px !important }
 .map-label { left: 17px; color: #787883; font-size: 9px; letter-spacing: .1em; font-family: 'Titillium Web', sans-serif }
 .map-label.top { top: 16px }
 .map-label.bottom { bottom: 16px }
