@@ -345,97 +345,60 @@ function App() {
           </div>
 
           <div className="twin" data-tour="twin">
-            <div className="map-label top">MONACO GP / PEDESTRIAN FLOW <b>LIVE</b></div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <div className="map-inner">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
 
-              {/* ── Monaco Circuit Track Outline (accurate clockwise trace) ── */}
-              {/*
-                Key corners:
-                Sainte Devote (24,54) → Beau Rivage uphill → Casino (35,16)
-                → Mirabeau (50,27) → Loews hairpin (62,35) → Portier (72,44)
-                → Tunnel (78,51) → exit (85,56) → Nouvelle Chicane (82,64)
-                → Pool (78,68) → La Rascasse (66,77) → Anthony Noghes (56,80)
-                → Start/Finish straight → Le Rocher area → back to Sainte Devote
-              */}
-              <polyline
-                className="track-outline"
-                points="
-                  24,54
-                  20,47 18,39 20,28 27,19 35,16
-                  44,20 50,27
-                  57,31 62,35
-                  67,38 72,43 74,48
-                  78,51 80,53
-                  84,55 85,58 84,62
-                  82,65 80,68 78,70
-                  74,73 70,76 66,77
-                  60,79 56,80
-                  48,79 40,79 32,77
-                  24,74 19,70 13,65
-                  11,60 13,56 18,54 24,54
-                "
-              />
+                {/* ── Pedestrian edges from venue_layout.json ── */}
+                {data.layout?.edges?.map((e, i) => {
+                  const from = zones.find((z) => z.zone_id === e.from);
+                  const to   = zones.find((z) => z.zone_id === e.to);
+                  if (!from || !to) return null;
+                  // Color edge by avg risk of its two endpoints
+                  const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
+                  const edgeTone = avgRisk > 80 ? "edge-critical"
+                                 : avgRisk > 60 ? "edge-intervention"
+                                 : avgRisk > 30 ? "edge-monitor"
+                                 : "edge-safe";
+                  const isHotPath =
+                    (route?.recommended_path || []).includes(e.from) &&
+                    (route?.recommended_path || []).includes(e.to);
+                  return (
+                    <line
+                      key={i}
+                      x1={from.map_x} y1={from.map_y}
+                      x2={to.map_x}   y2={to.map_y}
+                      className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
+                    />
+                  );
+                })}
 
-              {/* ── Start/Finish line marker ── */}
-              <line x1="46" y1="79" x2="46" y2="75" className="start-finish-line" />
-              <text x="46" y="73" className="map-annotation sf-label">S/F</text>
-
-              {/* ── Harbour water (Port Hercule, southeast of circuit) ── */}
-              <ellipse cx="74" cy="65" rx="10" ry="6" className="harbour-fill" />
-              <text x="74" y="66" className="map-annotation">PORT HERCULE</text>
-
-              {/* ── Pedestrian edges from venue_layout.json ── */}
-              {data.layout?.edges?.map((e, i) => {
-                const from = zones.find((z) => z.zone_id === e.from);
-                const to   = zones.find((z) => z.zone_id === e.to);
-                if (!from || !to) return null;
-                // Color edge by avg risk of its two endpoints
-                const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
-                const edgeTone = avgRisk > 80 ? "edge-critical"
-                               : avgRisk > 60 ? "edge-intervention"
-                               : avgRisk > 30 ? "edge-monitor"
-                               : "edge-safe";
-                const isHotPath =
-                  (route?.recommended_path || []).includes(e.from) &&
-                  (route?.recommended_path || []).includes(e.to);
-                return (
+                {/* ── Highest-risk pulsing alert line ── */}
+                {highest && highest.zone_id !== "fontvieille_egress" && (
                   <line
-                    key={i}
-                    x1={from.map_x} y1={from.map_y}
-                    x2={to.map_x}   y2={to.map_y}
-                    className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
+                    className="hot"
+                    x1={highest.map_x} y1={highest.map_y}
+                    x2="68" y2="87"
                   />
-                );
-              })}
+                )}
 
-              {/* ── Highest-risk pulsing alert line ── */}
-              {highest && highest.zone_id !== "fontvieille_egress" && (
-                <line
-                  className="hot"
-                  x1={highest.map_x} y1={highest.map_y}
-                  x2="68" y2="87"
-                />
-              )}
+              </svg>
 
-            </svg>
-
-            {/* ── Zone Markers ── */}
-            {zones.map((z) => (
-              <button
-                key={z.zone_id}
-                onClick={() => setSelectedId(z.zone_id)}
-                data-tour={z.zone_id === selectedId ? "zone" : undefined}
-                className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
-                style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
-                aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
-              >
-                <span className="halo" />
-                <b>{z.risk_score}</b>
-                <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
-              </button>
-            ))}
-
-            <div className="map-label bottom">NORTH ↑ <b>SCHEMATIC VIEW · v1.0.0</b></div>
+              {/* ── Zone Markers ── */}
+              {zones.map((z) => (
+                <button
+                  key={z.zone_id}
+                  onClick={() => setSelectedId(z.zone_id)}
+                  data-tour={z.zone_id === selectedId ? "zone" : undefined}
+                  className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
+                  style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
+                  aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
+                >
+                  <span className="halo" />
+                  <b>{z.risk_score}</b>
+                  <label>{z.zone_name.split(" - ")[0]}</label>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ── Prediction Alert ── */}

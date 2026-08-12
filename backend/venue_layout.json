@@ -9,9 +9,11 @@
       "type": "gate",
       "capacity_per_min": 900,
       "accessible": false,
-      "map_x": 12,
-      "map_y": 65,
-      "notes": "Entrance for Le Rocher, a hillside general-admission viewing area outside the circuit itself."
+      "map_x": 26.6,
+      "map_y": 58.2,
+      "notes": "Entrance for Le Rocher, a hillside general-admission viewing area outside the circuit itself.",
+      "lat": 43.7305,
+      "lng": 7.421
     },
     {
       "id": "ste_devote",
@@ -19,9 +21,11 @@
       "type": "corridor",
       "capacity_per_min": 600,
       "accessible": false,
-      "map_x": 24,
-      "map_y": 54,
-      "notes": "Circuit's narrowest, most accident-prone corner. Pinch point between Gate 1 / Zone Z crowds and the harbour-side grandstands."
+      "map_x": 35.7,
+      "map_y": 47.3,
+      "notes": "Circuit's narrowest, most accident-prone corner. Pinch point between Gate 1 / Zone Z crowds and the harbour-side grandstands.",
+      "lat": 43.7367,
+      "lng": 7.4208
     },
     {
       "id": "zone_z_general_admission",
@@ -29,9 +33,11 @@
       "type": "field",
       "capacity_per_min": 1200,
       "accessible": false,
-      "map_x": 15,
-      "map_y": 40,
-      "notes": "Unreserved standing zone on the hillside near the uphill Beau Rivage section, close to Sainte Devote."
+      "map_x": 30.7,
+      "map_y": 30.9,
+      "notes": "Unreserved standing zone on the hillside near the uphill Beau Rivage section, close to Sainte Devote.",
+      "lat": 43.738,
+      "lng": 7.422
     },
     {
       "id": "monaco_train_station",
@@ -39,9 +45,11 @@
       "type": "corridor",
       "capacity_per_min": 2500,
       "accessible": true,
-      "map_x": 76,
-      "map_y": 14,
-      "notes": "Largest single crowd-injection point. Feeds directly into Gate 8 via a pedestrian tunnel. Strong candidate for a 'train arrival' shock event."
+      "map_x": 63.4,
+      "map_y": 14.2,
+      "notes": "Largest single crowd-injection point. Feeds directly into Gate 8 via a pedestrian tunnel. Strong candidate for a 'train arrival' shock event.",
+      "lat": 43.73861,
+      "lng": 7.41917
     },
     {
       "id": "gate_8_k1_k3",
@@ -49,9 +57,11 @@
       "type": "gate",
       "capacity_per_min": 1100,
       "accessible": true,
-      "map_x": 72,
-      "map_y": 35,
-      "notes": "Below the train station stairs. Grandstand K overlooks Port Hercule between the Tabac corner and the Piscine chicane."
+      "map_x": 67.1,
+      "map_y": 27.5,
+      "notes": "Below the train station stairs. Grandstand K overlooks Port Hercule between the Tabac corner and the Piscine chicane.",
+      "lat": 43.7368,
+      "lng": 7.423
     },
     {
       "id": "gate_7_k4_k6",
@@ -59,9 +69,11 @@
       "type": "gate",
       "capacity_per_min": 900,
       "accessible": true,
-      "map_x": 83,
-      "map_y": 52,
-      "notes": "Second entrance for the K grandstand, closer to the Louis Chiron / Piscine chicane end."
+      "map_x": 74.7,
+      "map_y": 41.5,
+      "notes": "Second entrance for the K grandstand, closer to the Louis Chiron / Piscine chicane end.",
+      "lat": 43.7345,
+      "lng": 7.4265
     },
     {
       "id": "port_hercule_promenade",
@@ -69,9 +81,11 @@
       "type": "corridor",
       "capacity_per_min": 1800,
       "accessible": true,
-      "map_x": 60,
-      "map_y": 54,
-      "notes": "Main pedestrian spine along the harbour, connecting Gates 2, 7 and 8 and Grandstands K, N, O, P, V. Highest-traffic corridor in the venue - primary bottleneck candidate."
+      "map_x": 58.0,
+      "map_y": 52.0,
+      "notes": "Main pedestrian spine along the harbour, connecting Gates 2, 7 and 8 and Grandstands K, N, O, P, V. Highest-traffic corridor in the venue - primary bottleneck candidate.",
+      "lat": 43.7333,
+      "lng": 7.425
     },
     {
       "id": "gate_2_nopv",
@@ -79,9 +93,11 @@
       "type": "gate",
       "capacity_per_min": 1000,
       "accessible": true,
-      "map_x": 80,
-      "map_y": 67,
-      "notes": "Harbourfront grandstands built over the water, facing the Piscine (swimming pool) section."
+      "map_x": 71.8,
+      "map_y": 64.5,
+      "notes": "Harbourfront grandstands built over the water, facing the Piscine (swimming pool) section.",
+      "lat": 43.732,
+      "lng": 7.4275
     },
     {
       "id": "casino_square_gate_b",
@@ -89,9 +105,11 @@
       "type": "field",
       "capacity_per_min": 700,
       "accessible": true,
-      "map_x": 35,
-      "map_y": 16,
-      "notes": "Viewing area at the Casino corner. High footfall from cafes, restaurants and the fan zone walk."
+      "map_x": 45.2,
+      "map_y": 19.2,
+      "notes": "Viewing area at the Casino corner. High footfall from cafes, restaurants and the fan zone walk.",
+      "lat": 43.7395,
+      "lng": 7.4276
     },
     {
       "id": "fan_zone_place_darmes",
@@ -99,9 +117,11 @@
       "type": "concession",
       "capacity_per_min": 1500,
       "accessible": true,
-      "map_x": 46,
-      "map_y": 40,
-      "notes": "Free public fan zone with big screen, food and drink. No ticket required, so inflow is the least predictable zone in the venue."
+      "map_x": 48.9,
+      "map_y": 34.3,
+      "notes": "Free public fan zone with big screen, food and drink. No ticket required, so inflow is the least predictable zone in the venue.",
+      "lat": 43.7305,
+      "lng": 7.4213
     },
     {
       "id": "gate_3_t_stands",
@@ -109,9 +129,11 @@
       "type": "gate",
       "capacity_per_min": 800,
       "accessible": true,
-      "map_x": 56,
-      "map_y": 76,
-      "notes": "Entrance near the Nouvelle Chicane / pit straight hospitality stands."
+      "map_x": 53.9,
+      "map_y": 69.8,
+      "notes": "Entrance near the Nouvelle Chicane / pit straight hospitality stands.",
+      "lat": 43.7315,
+      "lng": 7.423
     },
     {
       "id": "gate_4_x_stands",
@@ -119,9 +141,11 @@
       "type": "gate",
       "capacity_per_min": 700,
       "accessible": false,
-      "map_x": 38,
-      "map_y": 80,
-      "notes": "Entrance on Rue Princess Caroline along the start/finish straight."
+      "map_x": 42.6,
+      "map_y": 76.0,
+      "notes": "Entrance on Rue Princess Caroline along the start/finish straight.",
+      "lat": 43.731,
+      "lng": 7.4225
     },
     {
       "id": "gate_5_grandstand_l",
@@ -129,9 +153,11 @@
       "type": "gate",
       "capacity_per_min": 650,
       "accessible": true,
-      "map_x": 20,
-      "map_y": 72,
-      "notes": "Grandstand L overlooks the exit of the Piscine chicane, facing Le Rocher."
+      "map_x": 29.4,
+      "map_y": 74.3,
+      "notes": "Grandstand L overlooks the exit of the Piscine chicane, facing Le Rocher.",
+      "lat": 43.73,
+      "lng": 7.4245
     },
     {
       "id": "fontvieille_egress",
@@ -139,24 +165,104 @@
       "type": "exit",
       "capacity_per_min": 2200,
       "accessible": true,
-      "map_x": 58,
-      "map_y": 89,
-      "notes": "Main post-event egress route away from the harbour, toward parking and the Fontvieille district."
+      "map_x": 62.7,
+      "map_y": 82.6,
+      "notes": "Main post-event egress route away from the harbour, toward parking and the Fontvieille district.",
+      "lat": 43.7267,
+      "lng": 7.4197
     }
   ],
   "edges": [
-    { "from": "gate_1_le_rocher", "to": "ste_devote", "distance_m": 60, "width_m": 3, "accessible": false },
-    { "from": "zone_z_general_admission", "to": "ste_devote", "distance_m": 40, "width_m": 3.5, "accessible": false },
-    { "from": "monaco_train_station", "to": "gate_8_k1_k3", "distance_m": 90, "width_m": 5, "accessible": true },
-    { "from": "gate_8_k1_k3", "to": "port_hercule_promenade", "distance_m": 30, "width_m": 6, "accessible": true },
-    { "from": "gate_7_k4_k6", "to": "port_hercule_promenade", "distance_m": 30, "width_m": 6, "accessible": true },
-    { "from": "gate_2_nopv", "to": "port_hercule_promenade", "distance_m": 20, "width_m": 6, "accessible": true },
-    { "from": "port_hercule_promenade", "to": "ste_devote", "distance_m": 150, "width_m": 5, "accessible": false },
-    { "from": "port_hercule_promenade", "to": "fontvieille_egress", "distance_m": 400, "width_m": 6, "accessible": true },
-    { "from": "casino_square_gate_b", "to": "fan_zone_place_darmes", "distance_m": 250, "width_m": 8, "accessible": true },
-    { "from": "fan_zone_place_darmes", "to": "gate_3_t_stands", "distance_m": 300, "width_m": 8, "accessible": true },
-    { "from": "gate_3_t_stands", "to": "gate_4_x_stands", "distance_m": 120, "width_m": 4, "accessible": false },
-    { "from": "gate_4_x_stands", "to": "gate_5_grandstand_l", "distance_m": 100, "width_m": 4, "accessible": true },
-    { "from": "gate_5_grandstand_l", "to": "gate_1_le_rocher", "distance_m": 80, "width_m": 3.5, "accessible": false }
+    {
+      "from": "gate_1_le_rocher",
+      "to": "ste_devote",
+      "distance_m": 142,
+      "width_m": 3,
+      "accessible": false
+    },
+    {
+      "from": "zone_z_general_admission",
+      "to": "ste_devote",
+      "distance_m": 171,
+      "width_m": 3.5,
+      "accessible": false
+    },
+    {
+      "from": "monaco_train_station",
+      "to": "gate_8_k1_k3",
+      "distance_m": 138,
+      "width_m": 5,
+      "accessible": true
+    },
+    {
+      "from": "gate_8_k1_k3",
+      "to": "port_hercule_promenade",
+      "distance_m": 261,
+      "width_m": 6,
+      "accessible": true
+    },
+    {
+      "from": "gate_7_k4_k6",
+      "to": "port_hercule_promenade",
+      "distance_m": 197,
+      "width_m": 6,
+      "accessible": true
+    },
+    {
+      "from": "gate_2_nopv",
+      "to": "port_hercule_promenade",
+      "distance_m": 186,
+      "width_m": 6,
+      "accessible": true
+    },
+    {
+      "from": "port_hercule_promenade",
+      "to": "ste_devote",
+      "distance_m": 228,
+      "width_m": 5,
+      "accessible": false
+    },
+    {
+      "from": "port_hercule_promenade",
+      "to": "fontvieille_egress",
+      "distance_m": 310,
+      "width_m": 6,
+      "accessible": true
+    },
+    {
+      "from": "casino_square_gate_b",
+      "to": "fan_zone_place_darmes",
+      "distance_m": 155,
+      "width_m": 8,
+      "accessible": true
+    },
+    {
+      "from": "fan_zone_place_darmes",
+      "to": "gate_3_t_stands",
+      "distance_m": 359,
+      "width_m": 8,
+      "accessible": true
+    },
+    {
+      "from": "gate_3_t_stands",
+      "to": "gate_4_x_stands",
+      "distance_m": 129,
+      "width_m": 4,
+      "accessible": false
+    },
+    {
+      "from": "gate_4_x_stands",
+      "to": "gate_5_grandstand_l",
+      "distance_m": 133,
+      "width_m": 4,
+      "accessible": true
+    },
+    {
+      "from": "gate_5_grandstand_l",
+      "to": "gate_1_le_rocher",
+      "distance_m": 163,
+      "width_m": 3.5,
+      "accessible": false
+    }
   ]
 }
