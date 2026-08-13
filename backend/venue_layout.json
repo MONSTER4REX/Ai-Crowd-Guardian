@@ -318,6 +318,34 @@
       "distance_m": 163,
       "width_m": 3.5,
       "accessible": false
+    },
+    {
+      "from": "gate_3_t_stands",
+      "to": "gate_2_nopv",
+      "distance_m": 210,
+      "width_m": 5,
+      "accessible": true
+    },
+    {
+      "from": "fan_zone_place_darmes",
+      "to": "port_hercule_promenade",
+      "distance_m": 180,
+      "width_m": 6,
+      "accessible": true
+    },
+    {
+      "from": "ste_devote",
+      "to": "fan_zone_place_darmes",
+      "distance_m": 140,
+      "width_m": 4.5,
+      "accessible": true
+    },
+    {
+      "from": "gate_5_grandstand_l",
+      "to": "fan_zone_place_darmes",
+      "distance_m": 160,
+      "width_m": 4,
+      "accessible": true
     }
   ]
 }

@@ -253,7 +253,16 @@ function App() {
     );
   }
 
-  const zones = data.zone_states;
+  const COORDINATE_OVERRIDES = {
+    ste_devote: { map_x: 20.0, map_y: 46.0 },
+    fan_zone_place_darmes: { map_x: 44.0, map_y: 33.0 },
+    port_hercule_promenade: { map_x: 60.0, map_y: 56.0 }
+  };
+
+  const zones = data.zone_states.map((z) => {
+    const override = COORDINATE_OVERRIDES[z.zone_id];
+    return override ? { ...z, ...override } : z;
+  });
   const focus = zones.find((z) => z.zone_id === selectedId) || zones[0];
   const highest = zones.reduce((a, b) => (b.risk_score > a.risk_score ? b : a), zones[0]);
   const [highLead, HighIcon] = meta(highest.risk_tier);
@@ -325,6 +334,50 @@ function App() {
                 <Icon className={`icon-${tone}`} /><span>{label}</span><i />
               </div>
             ))}
+          </section>
+
+          <section className="legend-shapes">
+            <span className="eyebrow">ZONE SYMBOLS</span>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Gate (Square)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <rect x="0.5" y="2.5" width="15" height="11" rx="5" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Corridor (Pill)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <circle cx="8" cy="8" r="7" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Concession (Circle)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <polygon points="8,1.5 14,5 14,11 8,14.5 2,11 2,5" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Exit (Hexagon)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <polygon points="8,1 15,8 8,15 1,8" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Field / Area (Diamond)</span>
+            </div>
           </section>
 
           {/* ── Telemetry Commander ── */}
@@ -405,9 +458,13 @@ function App() {
                   const from = zones.find((z) => z.zone_id === e.from);
                   const to   = zones.find((z) => z.zone_id === e.to);
                   if (!from || !to) return null;
+                  const path = route?.recommended_path || [];
+                  const idxFrom = path.indexOf(e.from);
+                  const idxTo = path.indexOf(e.to);
                   const isHotPath =
-                    (route?.recommended_path || []).includes(e.from) &&
-                    (route?.recommended_path || []).includes(e.to);
+                    idxFrom !== -1 &&
+                    idxTo !== -1 &&
+                    Math.abs(idxFrom - idxTo) === 1;
                   return (
                     <line
                       key={i}
@@ -418,15 +475,6 @@ function App() {
                     />
                   );
                 })}
-
-                {/* ── Highest-risk pulsing alert line ── */}
-                {highest && highest.zone_id !== "fontvieille_egress" && (
-                  <line
-                    className="hot"
-                    x1={highest.map_x * 10} y1={highest.map_y * 5.71}
-                    x2={68 * 10} y2={87 * 5.71}
-                  />
-                )}
 
                 {/* ── Zone Nodes (Geometric shapes, badges, labels) ── */}
                 {zones.map((z) => {
