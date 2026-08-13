@@ -461,6 +461,15 @@ def _classify_intent_via_hf(prompt: str) -> tuple[str, float]:
         score: float = round(data["scores"][0], 3)
         return label, score
     except Exception:  # noqa: BLE001
+        p_lower = prompt.lower()
+        if "highest risk" in p_lower or "risk area" in p_lower or "danger" in p_lower:
+            return "highest risk zone", 1.0
+        elif "evac" in p_lower or "emergency" in p_lower:
+            return "emergency evacuation", 1.0
+        elif "safest" in p_lower or "safe route" in p_lower or "safest route" in p_lower:
+            return "safest route", 1.0
+        elif "cause" in p_lower or "factor" in p_lower or "reason" in p_lower:
+            return "risk causes and factors", 1.0
         return "general status", 0.0
 
 
