@@ -130,27 +130,11 @@ function App() {
   const [emergency, setEmergency] = useState(false);
   const [emergencyData, setEmergencyData] = useState(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
-  const [showPersonas, setShowPersonas] = useState(true);
   const [scenarios, setScenarios] = useState([]);
   const [activePreset, setActivePreset] = useState("baseline");
   const [cmdQuery, setCmdQuery] = useState("");
   const [cmdResult, setCmdResult] = useState("");
   const [cmdLoading, setCmdLoading] = useState(false);
-
-  // ── Persona definitions (Feature 11) ──
-  const personaList = [
-    { id: "general", label: "General", color: "#2ECC71" },
-    { id: "fan", label: "Fan Zone", color: "#F5C518" },
-    { id: "vip", label: "VIP / Hospitality", color: "#9B59B6" },
-    { id: "family", label: "Family", color: "#3498DB" },
-    { id: "operations", label: "Staff / Ops", color: "#E67E22" },
-  ];
-
-  const getPersonaForZone = (z) => {
-    const seed = (z.zone_id || "").split("").reduce((a, b) => a + b.charCodeAt(0), 0);
-    const idx = Math.abs((seed + Math.round((z.density_norm || 0) * 100) + tick) % personaList.length);
-    return personaList[idx];
-  };
   const [log, setLog] = useState([
     { time: "12:41:20", kind: "resolved", title: "Risk reduced 82 → 54", body: "Route recommendation accepted at Port Hercule." },
     { time: "12:41:12", kind: "route",    title: "Safest route optimized", body: "Fontvieille path reduces exposure by 63%." },
@@ -357,7 +341,6 @@ function App() {
             ))}
           </section>
 
-<<<<<<< HEAD
           <section className="legend-shapes">
             <span className="eyebrow">ZONE SYMBOLS</span>
             <div className="shape-legend-item">
@@ -399,45 +382,10 @@ function App() {
                 </svg>
               </span>
               <span>Field / Area (Diamond)</span>
-=======
-          {/* ── Persona Visuals ── */}
-          <section className="personas" style={{ marginTop: 14 }}>
-            <span className="eyebrow">PERSONA VISUALS</span>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
-              <label className="accessible-toggle" style={{ fontSize: 11 }}>
-                <input type="checkbox" checked={showPersonas} onChange={(e) => setShowPersonas(e.target.checked)} />
-                Show personas
-              </label>
-              <div className="persona-legend-items">
-                {personaList.map((p) => (
-                  <div key={p.id} className="persona-legend-item">
-                    <span className="persona-swatch" style={{ background: p.color }} />
-                    <small className="persona-label">{p.label}</small>
-                  </div>
-                ))}
-              </div>
-              <div className="persona-counts" aria-hidden style={{ marginTop: 4 }}>
-                {(function () {
-                  const map = {};
-                  zones?.forEach((z) => {
-                    const p = getPersonaForZone(z).id;
-                    map[p] = (map[p] || 0) + 1;
-                  });
-                  return (
-                    <div className="persona-counts-inner">
-                      {personaList.map((p) => (
-                        <div key={p.id} className="persona-count-item">
-                          <span className="persona-swatch" style={{ background: p.color }} />
-                          <small className="persona-count-number">{map[p.id] || 0}</small>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </div>
->>>>>>> origin/Could-Have-Updations
             </div>
           </section>
+
+
 
           {/* ── Telemetry Commander ── */}
           <section className="commander-section" data-tour="commander">
@@ -697,24 +645,7 @@ function App() {
                         </div>
                       </foreignObject>
 
-                      {/* Persona badge (top-left of the zone node) */}
-                      {showPersonas && (() => {
-                        const p = getPersonaForZone(z);
-                        return (
-                          <g pointerEvents="none" style={{ pointerEvents: "none" }}>
-                            <circle
-                              cx={cx - 17}
-                              cy={cy - 17}
-                              r={6}
-                              fill={p.color}
-                              stroke="#0a0a0d"
-                              strokeWidth={1.5}
-                              style={{ filter: "drop-shadow(0 1px 2px #0008)" }}
-                            />
-                            <title>{p.label} Persona</title>
-                          </g>
-                        );
-                      })()}
+
 
                       {/* Tabular risk score badge in top right corner */}
                       <g pointerEvents="none" style={{ pointerEvents: "none" }}>
