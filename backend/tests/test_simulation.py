@@ -21,7 +21,7 @@ def test_load_layout():
     layout = load_layout()
     assert layout["venue_id"] == "circuit_de_monaco"
     assert len(layout["zones"]) == 14
-    assert len(layout["edges"]) == 13
+    assert len(layout["edges"]) == 17
 
 
 def test_simulate_tick():
