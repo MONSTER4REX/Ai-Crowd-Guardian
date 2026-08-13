@@ -13,9 +13,12 @@ import {
   ChevronRight,
   CircleHelp,
   Crosshair,
+  DoorClosed,
+  DoorOpen,
   Gauge,
   GitBranch,
   Info,
+  LogOut,
   MapPin,
   Pause,
   Play,
@@ -24,6 +27,7 @@ import {
   Route,
   ShieldCheck,
   Siren,
+  Store,
   TriangleAlert,
   Users,
   Wifi,
@@ -99,6 +103,24 @@ function clock(seconds) {
 
 // ── Main App ───────────────────────────────────────────────────────────────────
 function App() {
+  const TIER_COLORS = {
+    safe: "#2ECC71",
+    monitor: "#F5C518",
+    intervention: "#FF8C42",
+    critical: "#FF3B30"
+  };
+
+  const getZoneIcon = (type, zoneId) => {
+    if (type === "gate") {
+      const isClosed = zoneId === "gate_8_k1_k3" && shock === "gate_8_closure";
+      return isClosed ? DoorClosed : DoorOpen;
+    }
+    if (type === "exit") return LogOut;
+    if (type === "concession") return Store;
+    if (type === "field") return Users;
+    return Route;
+  };
+
   const [tick, setTick] = useState(0);
   const [running, setRunning] = useState(true);
   const [shock, setShock] = useState(null);
@@ -231,7 +253,16 @@ function App() {
     );
   }
 
-  const zones = data.zone_states;
+  const COORDINATE_OVERRIDES = {
+    ste_devote: { map_x: 20.0, map_y: 46.0 },
+    fan_zone_place_darmes: { map_x: 44.0, map_y: 33.0 },
+    port_hercule_promenade: { map_x: 60.0, map_y: 56.0 }
+  };
+
+  const zones = data.zone_states.map((z) => {
+    const override = COORDINATE_OVERRIDES[z.zone_id];
+    return override ? { ...z, ...override } : z;
+  });
   const focus = zones.find((z) => z.zone_id === selectedId) || zones[0];
   const highest = zones.reduce((a, b) => (b.risk_score > a.risk_score ? b : a), zones[0]);
   const [highLead, HighIcon] = meta(highest.risk_tier);
@@ -305,6 +336,50 @@ function App() {
             ))}
           </section>
 
+          <section className="legend-shapes">
+            <span className="eyebrow">ZONE SYMBOLS</span>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Gate (Square)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <rect x="0.5" y="2.5" width="15" height="11" rx="5" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Corridor (Pill)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <circle cx="8" cy="8" r="7" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Concession (Circle)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <polygon points="8,1.5 14,5 14,11 8,14.5 2,11 2,5" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Exit (Hexagon)</span>
+            </div>
+            <div className="shape-legend-item">
+              <span className="legend-shape-svg-wrapper">
+                <svg viewBox="0 0 16 16" width="12" height="12">
+                  <polygon points="8,1 15,8 8,15 1,8" fill="none" stroke="#6e6e77" strokeWidth="1.5" />
+                </svg>
+              </span>
+              <span>Field / Area (Diamond)</span>
+            </div>
+          </section>
+
           {/* ── Telemetry Commander ── */}
           <section className="commander-section" data-tour="commander">
             <span className="eyebrow">💬 TELEMETRY COMMANDER</span>
@@ -345,97 +420,232 @@ function App() {
           </div>
 
           <div className="twin" data-tour="twin">
-            <div className="map-label top">MONACO GP / PEDESTRIAN FLOW <b>LIVE</b></div>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+            <div className="map-inner">
+              <svg viewBox="0 0 1000 571" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  {zones.map((z) => (
+                    <radialGradient
+                      key={`glow-grad-${z.zone_id}`}
+                      id={`glow-grad-${z.zone_id}`}
+                      cx="50%" cy="50%" r="50%"
+                    >
+                      <stop offset="0%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity={z.density_norm * 0.75} />
+                      <stop offset="50%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity={z.density_norm * 0.3} />
+                      <stop offset="100%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity="0" />
+                    </radialGradient>
+                  ))}
+                </defs>
 
-              {/* ── Monaco Circuit Track Outline (accurate clockwise trace) ── */}
-              {/*
-                Key corners:
-                Sainte Devote (24,54) → Beau Rivage uphill → Casino (35,16)
-                → Mirabeau (50,27) → Loews hairpin (62,35) → Portier (72,44)
-                → Tunnel (78,51) → exit (85,56) → Nouvelle Chicane (82,64)
-                → Pool (78,68) → La Rascasse (66,77) → Anthony Noghes (56,80)
-                → Start/Finish straight → Le Rocher area → back to Sainte Devote
-              */}
-              <polyline
-                className="track-outline"
-                points="
-                  24,54
-                  20,47 18,39 20,28 27,19 35,16
-                  44,20 50,27
-                  57,31 62,35
-                  67,38 72,43 74,48
-                  78,51 80,53
-                  84,55 85,58 84,62
-                  82,65 80,68 78,70
-                  74,73 70,76 66,77
-                  60,79 56,80
-                  48,79 40,79 32,77
-                  24,74 19,70 13,65
-                  11,60 13,56 18,54 24,54
-                "
-              />
+                {/* ── Dynamic Heatmap Glows ── */}
+                {zones.map((z) => {
+                  const cx = z.map_x * 10;
+                  const cy = z.map_y * 5.71;
+                  const glowSize = 25 + z.density_norm * 70;
+                  return (
+                    <circle
+                      key={`glow-${z.zone_id}`}
+                      cx={cx}
+                      cy={cy}
+                      r={glowSize}
+                      fill={`url(#glow-grad-${z.zone_id})`}
+                      className="heatmap-glow"
+                    />
+                  );
+                })}
 
-              {/* ── Start/Finish line marker ── */}
-              <line x1="46" y1="79" x2="46" y2="75" className="start-finish-line" />
-              <text x="46" y="73" className="map-annotation sf-label">S/F</text>
+                {/* ── Pedestrian edges (corridors) ── */}
+                {data.layout?.edges?.map((e, i) => {
+                  const from = zones.find((z) => z.zone_id === e.from);
+                  const to   = zones.find((z) => z.zone_id === e.to);
+                  if (!from || !to) return null;
+                  const path = route?.recommended_path || [];
+                  const idxFrom = path.indexOf(e.from);
+                  const idxTo = path.indexOf(e.to);
+                  const isHotPath =
+                    idxFrom !== -1 &&
+                    idxTo !== -1 &&
+                    Math.abs(idxFrom - idxTo) === 1;
+                  return (
+                    <line
+                      key={i}
+                      x1={from.map_x * 10} y1={from.map_y * 5.71}
+                      x2={to.map_x * 10}   y2={to.map_y * 5.71}
+                      className={`ped-edge ${isHotPath ? "route-path" : "edge-normal"} ${e.accessible === false ? "inaccessible" : ""}`}
+                      strokeWidth={e.width_m ? e.width_m * 0.8 : 2}
+                    />
+                  );
+                })}
 
-              {/* ── Harbour water (Port Hercule, southeast of circuit) ── */}
-              <ellipse cx="74" cy="65" rx="10" ry="6" className="harbour-fill" />
-              <text x="74" y="66" className="map-annotation">PORT HERCULE</text>
+                {/* ── Zone Nodes (Geometric shapes, badges, labels) ── */}
+                {zones.map((z) => {
+                  const cx = z.map_x * 10;
+                  const cy = z.map_y * 5.71;
+                  const IconComponent = getZoneIcon(z.zone_type, z.zone_id);
+                  const isSelected = selectedId === z.zone_id;
+                  const riskColor = TIER_COLORS[z.risk_tier];
+                  const shapeFill = riskColor + "20"; // 12% opacity tint
+                  const shapeStroke = isSelected ? riskColor : "#2A2A32";
 
-              {/* ── Pedestrian edges from venue_layout.json ── */}
-              {data.layout?.edges?.map((e, i) => {
-                const from = zones.find((z) => z.zone_id === e.from);
-                const to   = zones.find((z) => z.zone_id === e.to);
-                if (!from || !to) return null;
-                // Color edge by avg risk of its two endpoints
-                const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
-                const edgeTone = avgRisk > 80 ? "edge-critical"
-                               : avgRisk > 60 ? "edge-intervention"
-                               : avgRisk > 30 ? "edge-monitor"
-                               : "edge-safe";
-                const isHotPath =
-                  (route?.recommended_path || []).includes(e.from) &&
-                  (route?.recommended_path || []).includes(e.to);
-                return (
-                  <line
-                    key={i}
-                    x1={from.map_x} y1={from.map_y}
-                    x2={to.map_x}   y2={to.map_y}
-                    className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
-                  />
-                );
-              })}
+                  let shapeElement = null;
+                  if (z.zone_type === "gate") {
+                    shapeElement = (
+                      <rect
+                        x={cx - 21}
+                        y={cy - 21}
+                        width={42}
+                        height={42}
+                        rx={6}
+                        ry={6}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "corridor") {
+                    shapeElement = (
+                      <rect
+                        x={cx - 28}
+                        y={cy - 16}
+                        width={56}
+                        height={32}
+                        rx={16}
+                        ry={16}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "concession") {
+                    shapeElement = (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={21}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "exit") {
+                    const pts = [
+                      `${cx + 22},${cy}`,
+                      `${cx + 11},${cy - 19}`,
+                      `${cx - 11},${cy - 19}`,
+                      `${cx - 22},${cy}`,
+                      `${cx - 11},${cy + 19}`,
+                      `${cx + 11},${cy + 19}`
+                    ].join(" ");
+                    shapeElement = (
+                      <polygon
+                        points={pts}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else {
+                    const pts = `${cx},${cy - 22} ${cx + 22},${cy} ${cx},${cy + 22} ${cx - 22},${cy}`;
+                    shapeElement = (
+                      <polygon
+                        points={pts}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  }
 
-              {/* ── Highest-risk pulsing alert line ── */}
-              {highest && highest.zone_id !== "fontvieille_egress" && (
-                <line
-                  className="hot"
-                  x1={highest.map_x} y1={highest.map_y}
-                  x2="68" y2="87"
-                />
-              )}
+                  return (
+                    <g
+                      key={z.zone_id}
+                      onClick={() => setSelectedId(z.zone_id)}
+                      className={`zone-group ${isSelected ? "picked" : ""}`}
+                      data-tour={isSelected ? "zone" : undefined}
+                    >
+                      {/* Active selection rotating dashed ring */}
+                      {isSelected && (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={28}
+                          fill="none"
+                          stroke={riskColor}
+                          strokeWidth={1.2}
+                          strokeDasharray="4 2"
+                          pointerEvents="none"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          <animateTransform
+                            attributeName="transform"
+                            type="rotate"
+                            from={`0 ${cx} ${cy}`}
+                            to={`360 ${cx} ${cy}`}
+                            dur="10s"
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                      )}
 
-            </svg>
+                      {/* Geometric Node Shape */}
+                      {shapeElement}
 
-            {/* ── Zone Markers ── */}
-            {zones.map((z) => (
-              <button
-                key={z.zone_id}
-                onClick={() => setSelectedId(z.zone_id)}
-                data-tour={z.zone_id === selectedId ? "zone" : undefined}
-                className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
-                style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
-                aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
-              >
-                <span className="halo" />
-                <b>{z.risk_score}</b>
-                <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
-              </button>
-            ))}
+                      <foreignObject
+                        x={cx - 10}
+                        y={cy - 10}
+                        width={20}
+                        height={20}
+                        pointerEvents="none"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "100%",
+                          height: "100%",
+                          color: riskColor,
+                          pointerEvents: "none"
+                        }}>
+                          <IconComponent size={14} strokeWidth={2.2} style={{ pointerEvents: "none" }} />
+                        </div>
+                      </foreignObject>
 
-            <div className="map-label bottom">NORTH ↑ <b>SCHEMATIC VIEW · v1.0.0</b></div>
+                      {/* Tabular risk score badge in top right corner */}
+                      <g pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        <circle
+                          cx={cx + 17}
+                          cy={cy - 17}
+                          r={9}
+                          fill={riskColor}
+                          className="badge-circle"
+                        />
+                        <text
+                          x={cx + 17}
+                          y={cy - 17}
+                          className="badge-text"
+                          fill={z.risk_tier === "safe" || z.risk_tier === "monitor" ? "#0A0A0D" : "#FFFFFF"}
+                        >
+                          {z.risk_score}
+                        </text>
+                      </g>
+
+                      {/* Dynamic name labels below node */}
+                      <text x={cx} y={cy + 33} className="zone-text-label" pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        {z.zone_name.split(" - ")[0]}
+                      </text>
+                      <text x={cx} y={cy + 43} className="zone-text-sublabel" pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        {z.zone_type.toUpperCase()}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
           </div>
 
           {/* ── Prediction Alert ── */}
