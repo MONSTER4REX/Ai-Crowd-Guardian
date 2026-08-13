@@ -3,9 +3,20 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+
+import requests
+
+# Load .env file so HF_TOKEN is available
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent / ".env")
+except ImportError:
+    pass  # dotenv optional; set HF_TOKEN manually if not installed
+
 
 ROOT = Path(__file__).parent
 
@@ -414,53 +425,90 @@ def emergency_status(tick: int = 0, shock: str | None = None) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------
+# Hugging Face Inference API — zero-shot intent classification
+# Model: facebook/bart-large-mnli  (Hugging Face Hub)
+# ---------------------------------------------------------------------------
+_HF_API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
+_HF_CANDIDATE_LABELS = [
+    "highest risk zone",
+    "emergency evacuation",
+    "safest route",
+    "risk causes and factors",
+    "general status",
+]
+
+
+def _classify_intent_via_hf(prompt: str) -> tuple[str, float]:
+    """Call Hugging Face Inference API to classify prompt intent.
+
+    Returns (label, confidence_score). Falls back to 'general status' on error.
+    Requires HF_TOKEN env var for authenticated access (free tier is fine).
+    """
+    token = os.environ.get("HF_TOKEN", "")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    try:
+        resp = requests.post(
+            _HF_API_URL,
+            headers=headers,
+            json={"inputs": prompt, "parameters": {"candidate_labels": _HF_CANDIDATE_LABELS}},
+            timeout=8,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # bart-large-mnli returns {labels: [...], scores: [...]}
+        label: str = data["labels"][0]
+        score: float = round(data["scores"][0], 3)
+        return label, score
+    except Exception:  # noqa: BLE001
+        return "general status", 0.0
+
+
 def query_commander(prompt: str, tick: int = 0, shock: str | None = None) -> dict:
-    """Natural-Language Telemetry Commander constrained to simulation state."""
-    prompt_lower = prompt.lower().strip()
+    """Natural-Language Telemetry Commander constrained to simulation state.
+
+    Intent is classified by the Hugging Face Inference API
+    (facebook/bart-large-mnli) rather than brittle keyword matching.
+    Falls back gracefully if the HF call is unavailable.
+    """
     snapshot = simulate_tick(tick, shock)
     states = snapshot["zone_states"]
     highest = max(states, key=lambda z: z["risk_score"])
     at_risk = [z for z in states if z["risk_score"] > 60]
 
-    if any(kw in prompt_lower for kw in ["highest", "worst", "peak", "most dangerous"]):
-        return {
-            "query": prompt,
-            "answer": (
-                f"The highest risk area is {highest['zone_name'].split(' - ')[0]} "
-                f"with a risk score of {highest['risk_score']} ({highest['risk_tier'].upper()}). "
-                f"Projected congestion threshold in {round(highest['predicted_congestion_in_sec']/60, 1)} minutes."
-            ),
-        }
+    # --- AI intent classification via Hugging Face Hub ---
+    intent, confidence = _classify_intent_via_hf(prompt)
 
-    if any(kw in prompt_lower for kw in ["emergency", "evacuation", "rebalance"]):
+    if intent == "highest risk zone":
+        answer = (
+            f"The highest risk area is {highest['zone_name'].split(' - ')[0]} "
+            f"with a risk score of {highest['risk_score']} ({highest['risk_tier'].upper()}). "
+            f"Projected congestion threshold in {round(highest['predicted_congestion_in_sec']/60, 1)} minutes."
+        )
+    elif intent == "emergency evacuation":
         em = emergency_status(tick, shock)
-        return {
-            "query": prompt,
-            "answer": f"Emergency Evacuation Status: {em['recommendation']}",
-        }
-
-    if any(kw in prompt_lower for kw in ["route", "path", "safest"]):
+        answer = f"Emergency Evacuation Status: {em['recommendation']}"
+    elif intent == "safest route":
         rec = recommend_route(highest["zone_id"])
-        return {
-            "query": prompt,
-            "answer": (
-                f"Safest route from {highest['zone_name'].split(' - ')[0]}: {rec['recommended']}. "
-                f"Tradeoff: {rec['tradeoff']}, {rec['exposure_reduction']} exposure."
-            ),
-        }
-
-    if any(kw in prompt_lower for kw in ["causes", "why", "factor", "reason"]):
+        answer = (
+            f"Safest route from {highest['zone_name'].split(' - ')[0]}: {rec['recommended']}. "
+            f"Tradeoff: {rec['tradeoff']}, {rec['exposure_reduction']} exposure."
+        )
+    elif intent == "risk causes and factors":
         factors = ", ".join(f"{f['cause']} ({int(f['weight']*100)}%)" for f in highest["top_factors"])
-        return {
-            "query": prompt,
-            "answer": f"Top risk drivers for {highest['zone_name'].split(' - ')[0]}: {factors}.",
-        }
+        answer = f"Top risk drivers for {highest['zone_name'].split(' - ')[0]}: {factors}."
+    else:  # general status
+        answer = (
+            f"AI Guardian Status: Venue simulating {snapshot['simulated_crowd']:,} attendees across 14 zones. "
+            f"{len(at_risk)} zones above intervention threshold. "
+            f"Highest pressure: {highest['zone_name'].split(' - ')[0]} (Risk {highest['risk_score']})."
+        )
 
     return {
         "query": prompt,
-        "answer": (
-            f"AI Guardian Status: Venue simulating {snapshot['simulated_crowd']:,} attendees across 14 zones. "
-            f"{len(at_risk)} zones above intervention threshold. Highest pressure: {highest['zone_name'].split(' - ')[0]} (Risk {highest['risk_score']})."
-        ),
+        "answer": answer,
+        "hf_model": "facebook/bart-large-mnli",
+        "hf_intent": intent,
+        "hf_confidence": confidence,
     }
 

@@ -91,26 +91,30 @@ cd frontend
 npm install
 npm run dev
 ```
+Open **http://localhost:3000** or **http://localhost:3001** (starting frontpage) in your browser.
 
-Open **http://localhost:3000** in your browser.
+### 3 — Hugging Face Integration Setup
+To comply with the rule of utilizing Hugging Face Hub tools, this project integrates a zero-shot classification model (`facebook/bart-large-mnli`) to process and classify operator telemetry commands inside the AI Commander.
+
+1. Obtain a free Hugging Face API token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens).
+2. Create a `.env` file in the `backend/` directory:
+   ```bash
+   HF_TOKEN=your_hugging_face_token_here
+   ```
+This token will be automatically picked up by the FastAPI backend to authenticate requests to the Hugging Face Inference API.
 
 ### Windows one-click (alternative)
-
-Double-click `run.bat` from the project root — it creates the venv, installs dependencies, and starts both servers automatically.
+Double-click `run.bat` from the project root — it automatically sets up environment dependencies, starts the backend, and fires up the main frontpage.
 
 ### Streamlit dashboard (standalone alternative)
-
 If you prefer a no-Node.js setup, run the Streamlit dashboard instead:
-
 ```bash
 cd backend
 streamlit run dashboard.py
 ```
-
 Open **http://localhost:8501**.
 
 ---
-
 ## 🔌 REST API Reference
 
 The FastAPI backend exposes the following endpoints (base URL: `http://localhost:8000`):
