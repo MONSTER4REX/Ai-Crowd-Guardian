@@ -41,16 +41,21 @@ ai-crowd-guardian/
 │   ├── requirements.txt
 │   └── tests/
 │       └── test_simulation.py
-├── frontend/                 # React + Vite operations dashboard (primary UI)
+├── front page/               # React + Vite 3D cinematic landing page & Operations Desk (Starting Point)
+│   ├── client/               # Storyboard frontend application
+│   │   └── src/              # Pages (Home & Operations Desk Dashboard) and 3D scenes
+│   ├── server/               # Express proxy server
+│   ├── package.json
+│   └── vite.config.ts
+├── frontend/                 # Direct React + Vite Operations Desk dashboard (standalone alternative)
 │   ├── src/
-│   │   ├── main.jsx          # Full dashboard — Digital Twin, panels, WebSocket client
+│   │   ├── main.jsx          # Direct dashboard layout
 │   │   └── index.css         # Telemetry Noir design system
-│   ├── index.html
 │   ├── package.json
 │   └── vite.config.ts
 ├── AI_Crowd_Guardian_PRD.md  # Full Product Requirements Document
 ├── ideas.md                  # Design direction — Telemetry Noir brief
-├── run.bat                   # Windows one-click launcher (backend + frontend)
+├── run.bat                   # Windows one-click launcher (backend + front page)
 └── README.md
 ```
 
@@ -83,15 +88,17 @@ pip install -r requirements.txt
 python -m uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-### 2 — Start the React frontend
+### 2 — Start the React Front Page (Landing Page & Dashboard)
 
 ```bash
-# In a new terminal, from project root
-cd frontend
+# In a new terminal, from the project root
+cd "front page"
 npm install
 npm run dev
 ```
-Open **http://localhost:3000** or **http://localhost:3001** (starting frontpage) in your browser.
+Open **http://localhost:3000** in your browser. This boots up the 3D cinematic interactive story. Scroll through the chapters and click **"Enter Operations Desk"** at Chapter 06 to access the full Operations Desk dashboard.
+
+*(Alternative: If you want to launch directly into the Operations Desk dashboard without the landing page, run `npm run dev` in the `frontend/` directory instead.)*
 
 ### 3 — Hugging Face Integration Setup
 To comply with the rule of utilizing Hugging Face Hub tools, this project integrates a zero-shot classification model (`facebook/bart-large-mnli`) to process and classify operator telemetry commands inside the AI Commander.
@@ -104,7 +111,7 @@ To comply with the rule of utilizing Hugging Face Hub tools, this project integr
 This token will be automatically picked up by the FastAPI backend to authenticate requests to the Hugging Face Inference API.
 
 ### Windows one-click (alternative)
-Double-click `run.bat` from the project root — it automatically sets up environment dependencies, starts the backend, and fires up the main frontpage.
+Double-click `run.bat` from the project root — it automatically sets up environment dependencies, starts the backend, and fires up the main front page.
 
 ### Streamlit dashboard (standalone alternative)
 If you prefer a no-Node.js setup, run the Streamlit dashboard instead:
