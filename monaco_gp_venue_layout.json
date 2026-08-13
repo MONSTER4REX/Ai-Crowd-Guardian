@@ -1,175 +1,230 @@
 {
-  "_readme": "Demo venue layout for AI Crowd Guardian, based on the Circuit de Monaco (Monaco Grand Prix). Built from publicly available spectator/grandstand guides, not an official circuit document. Gate-to-grandstand mappings and zone shapes are simplified for a hackathon demo. capacity_per_min, distance_m and width_m are illustrative placeholders — tune these against whatever the demo needs to show before presenting. Grandstands are grouped by shared entrance gate rather than modeled individually, to keep the zone count demo-friendly.",
+  "_readme": "Demo venue layout for AI Crowd Guardian, based on the Circuit de Monaco (Monaco Grand Prix). Each zone now carries real-world latitude/longitude. coordinate_source is 'verified' for points sourced directly from Wikipedia/geohack references (see coordinate_reference block below) and 'estimated' for zones interpolated along the harbourfront between verified anchors, since individual gate/grandstand positions are not independently published as GPS data anywhere public. Treat 'estimated' points as good enough to plot on a map for a demo, not as surveyed truth - replace with a real GIS trace of the circuit if this goes past hackathon stage. capacity_per_min, distance_m and width_m remain illustrative placeholders to tune before the demo.",
   "venue_id": "circuit_de_monaco",
   "venue_name": "Circuit de Monaco - Monaco Grand Prix",
+  "coordinate_reference": {
+    "note": "Verified anchor points, each independently sourced. All other zone coordinates are estimated by interpolating along the harbourfront relative to these.",
+    "anchors": [
+      {
+        "name": "Circuit de Monaco (general / start-finish area)",
+        "lat": 43.73472,
+        "lng": 7.42056,
+        "source": "Wikipedia - Circuit de Monaco infobox"
+      },
+      {
+        "name": "Start/Finish line, Boulevard Albert 1er",
+        "lat": 43.73465,
+        "lng": 7.42133,
+        "source": "Wikipedia geohack, Monaco GP race articles"
+      },
+      {
+        "name": "Sainte-Devote (Turn 1 / chapel)",
+        "lat": 43.7375,
+        "lng": 7.42083,
+        "source": "Wikipedia - Ravin de Sainte-Devote"
+      },
+      {
+        "name": "Monaco-Monte-Carlo train station",
+        "lat": 43.73861,
+        "lng": 7.41917,
+        "source": "Wikipedia - Monaco-Monte-Carlo station"
+      },
+      {
+        "name": "La Condamine / Port Hercule (harbour ward centroid)",
+        "lat": 43.73444,
+        "lng": 7.42083,
+        "source": "Wikipedia - La Condamine"
+      },
+      {
+        "name": "Casino de Monte-Carlo, Place du Casino",
+        "lat": 43.73944,
+        "lng": 7.42889,
+        "source": "Wikipedia - Monte Carlo Casino"
+      }
+    ]
+  },
   "zones": [
     {
       "id": "gate_1_le_rocher",
       "name": "Gate 1 - Le Rocher (General Admission)",
       "type": "gate",
+      "lat": 43.7368,
+      "lng": 7.4203,
+      "coordinate_source": "estimated",
       "capacity_per_min": 900,
       "accessible": false,
+      "notes": "Entrance for Le Rocher, a hillside general-admission viewing area outside the circuit itself, near Sainte Devote.",
       "map_x": 26.6,
-      "map_y": 58.2,
-      "notes": "Entrance for Le Rocher, a hillside general-admission viewing area outside the circuit itself.",
-      "lat": 43.7305,
-      "lng": 7.421
+      "map_y": 58.2
     },
     {
       "id": "ste_devote",
       "name": "Sainte Devote (Turn 1)",
       "type": "corridor",
+      "lat": 43.7375,
+      "lng": 7.42083,
+      "coordinate_source": "verified",
       "capacity_per_min": 600,
       "accessible": false,
-      "map_x": 35.7,
-      "map_y": 47.3,
       "notes": "Circuit's narrowest, most accident-prone corner. Pinch point between Gate 1 / Zone Z crowds and the harbour-side grandstands.",
-      "lat": 43.7367,
-      "lng": 7.4208
+      "map_x": 35.7,
+      "map_y": 47.3
     },
     {
       "id": "zone_z_general_admission",
       "name": "Zone Z (General Admission)",
       "type": "field",
+      "lat": 43.7335,
+      "lng": 7.4265,
+      "coordinate_source": "estimated",
       "capacity_per_min": 1200,
       "accessible": false,
+      "notes": "Unreserved standing zone near the Tabac corner, close to Sainte Devote.",
       "map_x": 30.7,
-      "map_y": 30.9,
-      "notes": "Unreserved standing zone on the hillside near the uphill Beau Rivage section, close to Sainte Devote.",
-      "lat": 43.738,
-      "lng": 7.422
+      "map_y": 30.9
     },
     {
       "id": "monaco_train_station",
       "name": "Monaco Monte-Carlo Train Station",
       "type": "corridor",
+      "lat": 43.73861,
+      "lng": 7.41917,
+      "coordinate_source": "verified",
       "capacity_per_min": 2500,
       "accessible": true,
-      "map_x": 63.4,
-      "map_y": 14.2,
       "notes": "Largest single crowd-injection point. Feeds directly into Gate 8 via a pedestrian tunnel. Strong candidate for a 'train arrival' shock event.",
-      "lat": 43.73861,
-      "lng": 7.41917
+      "map_x": 63.4,
+      "map_y": 14.2
     },
     {
       "id": "gate_8_k1_k3",
       "name": "Gate 8 - Grandstand K1-K3",
       "type": "gate",
+      "lat": 43.7355,
+      "lng": 7.4225,
+      "coordinate_source": "estimated",
       "capacity_per_min": 1100,
       "accessible": true,
-      "map_x": 67.1,
-      "map_y": 27.5,
       "notes": "Below the train station stairs. Grandstand K overlooks Port Hercule between the Tabac corner and the Piscine chicane.",
-      "lat": 43.7368,
-      "lng": 7.423
+      "map_x": 67.1,
+      "map_y": 27.5
     },
     {
       "id": "gate_7_k4_k6",
       "name": "Gate 7 - Grandstand K4-K6",
       "type": "gate",
+      "lat": 43.7328,
+      "lng": 7.427,
+      "coordinate_source": "estimated",
       "capacity_per_min": 900,
       "accessible": true,
-      "map_x": 74.7,
-      "map_y": 41.5,
       "notes": "Second entrance for the K grandstand, closer to the Louis Chiron / Piscine chicane end.",
-      "lat": 43.7345,
-      "lng": 7.4265
+      "map_x": 74.7,
+      "map_y": 41.5
     },
     {
       "id": "port_hercule_promenade",
       "name": "Port Hercule Harbour Promenade",
       "type": "corridor",
+      "lat": 43.73444,
+      "lng": 7.42083,
+      "coordinate_source": "verified",
       "capacity_per_min": 1800,
       "accessible": true,
+      "notes": "Main pedestrian spine along the harbour, connecting Gates 2, 7 and 8 and Grandstands K, N, O, P, V. Coordinate is the La Condamine ward centroid; this zone is a line in reality, not a point - split it into segments if the digital twin needs finer resolution. Highest-traffic corridor in the venue.",
       "map_x": 58.0,
-      "map_y": 52.0,
-      "notes": "Main pedestrian spine along the harbour, connecting Gates 2, 7 and 8 and Grandstands K, N, O, P, V. Highest-traffic corridor in the venue - primary bottleneck candidate.",
-      "lat": 43.7333,
-      "lng": 7.425
+      "map_y": 52.0
     },
     {
       "id": "gate_2_nopv",
       "name": "Gate 2 - Grandstands N, O, P, V",
       "type": "gate",
+      "lat": 43.733,
+      "lng": 7.4275,
+      "coordinate_source": "estimated",
       "capacity_per_min": 1000,
       "accessible": true,
-      "map_x": 71.8,
-      "map_y": 64.5,
       "notes": "Harbourfront grandstands built over the water, facing the Piscine (swimming pool) section.",
-      "lat": 43.732,
-      "lng": 7.4275
+      "map_x": 71.8,
+      "map_y": 64.5
     },
     {
       "id": "casino_square_gate_b",
       "name": "Casino Square - Grandstand B",
       "type": "field",
+      "lat": 43.73944,
+      "lng": 7.42889,
+      "coordinate_source": "verified",
       "capacity_per_min": 700,
       "accessible": true,
+      "notes": "Viewing area at the Casino corner, Place du Casino. High footfall from cafes, restaurants and the fan zone walk.",
       "map_x": 45.2,
-      "map_y": 19.2,
-      "notes": "Viewing area at the Casino corner. High footfall from cafes, restaurants and the fan zone walk.",
-      "lat": 43.7395,
-      "lng": 7.4276
+      "map_y": 19.2
     },
     {
       "id": "fan_zone_place_darmes",
       "name": "Fan Zone - Place d'Armes",
       "type": "concession",
+      "lat": 43.7328,
+      "lng": 7.4177,
+      "coordinate_source": "estimated",
       "capacity_per_min": 1500,
       "accessible": true,
-      "map_x": 48.9,
-      "map_y": 34.3,
       "notes": "Free public fan zone with big screen, food and drink. No ticket required, so inflow is the least predictable zone in the venue.",
-      "lat": 43.7305,
-      "lng": 7.4213
+      "map_x": 48.9,
+      "map_y": 34.3
     },
     {
       "id": "gate_3_t_stands",
       "name": "Gate 3 - Grandstands T1-T3",
       "type": "gate",
+      "lat": 43.7365,
+      "lng": 7.4245,
+      "coordinate_source": "estimated",
       "capacity_per_min": 800,
       "accessible": true,
-      "map_x": 53.9,
-      "map_y": 69.8,
       "notes": "Entrance near the Nouvelle Chicane / pit straight hospitality stands.",
-      "lat": 43.7315,
-      "lng": 7.423
+      "map_x": 53.9,
+      "map_y": 69.8
     },
     {
       "id": "gate_4_x_stands",
       "name": "Gate 4 - Grandstands X1-X2",
       "type": "gate",
+      "lat": 43.735,
+      "lng": 7.42,
+      "coordinate_source": "estimated",
       "capacity_per_min": 700,
       "accessible": false,
+      "notes": "Entrance on Rue Princess Caroline, west side of town.",
       "map_x": 42.6,
-      "map_y": 76.0,
-      "notes": "Entrance on Rue Princess Caroline along the start/finish straight.",
-      "lat": 43.731,
-      "lng": 7.4225
+      "map_y": 76.0
     },
     {
       "id": "gate_5_grandstand_l",
       "name": "Gate 5 - Grandstand L",
       "type": "gate",
+      "lat": 43.7325,
+      "lng": 7.426,
+      "coordinate_source": "estimated",
       "capacity_per_min": 650,
       "accessible": true,
-      "map_x": 29.4,
-      "map_y": 74.3,
       "notes": "Grandstand L overlooks the exit of the Piscine chicane, facing Le Rocher.",
-      "lat": 43.73,
-      "lng": 7.4245
+      "map_x": 29.4,
+      "map_y": 74.3
     },
     {
       "id": "fontvieille_egress",
       "name": "Fontvieille Egress / Post-Race Exit",
       "type": "exit",
+      "lat": 43.7285,
+      "lng": 7.421,
+      "coordinate_source": "estimated",
       "capacity_per_min": 2200,
       "accessible": true,
+      "notes": "Main post-event egress route away from the harbour, toward parking and the Fontvieille district (west of Monaco-Ville).",
       "map_x": 62.7,
-      "map_y": 82.6,
-      "notes": "Main post-event egress route away from the harbour, toward parking and the Fontvieille district.",
-      "lat": 43.7267,
-      "lng": 7.4197
+      "map_y": 82.6
     }
   ],
   "edges": [

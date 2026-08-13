@@ -210,7 +210,7 @@ svg { width: 16px; height: 16px; stroke-width: 1.8 }
   height: 460px; position: relative;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: #0c0c10;
+  background: #0A0A0D;
   isolation: isolate;
   display: flex;
   align-items: center;
@@ -231,51 +231,104 @@ svg { width: 16px; height: 16px; stroke-width: 1.8 }
   max-width: 825px;
   max-height: 460px;
   aspect-ratio: 1024 / 571;
-  background: url('/circuit_schematic_clean.png?v=2') no-repeat center;
-  background-size: 100% 100%;
+  background: #0A0A0D;
+  border-radius: 4px;
 }
-.map-inner svg, .map-inner .map-label, .map-inner .marker { position: absolute; z-index: 2 }
-.map-inner svg { inset: 0; width: 100%; height: 100%; overflow: visible }
+.map-inner svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible }
 
-/* ── Monaco circuit track outline ── */
-.track-outline {
-  fill: none;
-  stroke: #384048;
-  stroke-width: 3.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 6px #000a);
+/* ── Schematic Node Shapes ── */
+.zone-group {
+  cursor: pointer;
+}
+.zone-shape {
+  transition: stroke 0.2s var(--ease), fill-opacity 0.2s var(--ease), stroke-width 0.2s var(--ease);
+}
+.zone-group:hover .zone-shape {
+  stroke: var(--text);
+  stroke-width: 2.2px;
+  fill-opacity: 0.35;
+}
+.zone-group.picked .zone-shape {
+  stroke-width: 2.5px !important;
 }
 
-/* ── Harbour water ── */
-.harbour-fill { fill: #0d1e2e; stroke: #1e3448; stroke-width: .5 }
-.map-annotation { font-size: 3px; fill: #2d5a7a; font-family: 'Titillium Web', sans-serif; text-anchor: middle }
+/* ── Dynamic Heatmap Glow ── */
+.heatmap-glow {
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
 
-/* ── Pedestrian edge paths ── */
+/* ── Active Selection Ring ── */
+.selected-ring {
+  transform-origin: center;
+  animation: rotate-ring 12s linear infinite;
+  pointer-events: none;
+}
+@keyframes rotate-ring {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Tabular Risk Score Badge ── */
+.badge-circle {
+  stroke: #16161B;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+.badge-text {
+  font-family: 'IBM Plex Sans', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* ── Text Labels ── */
+.zone-text-label {
+  font-family: 'Titillium Web', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  fill: var(--text);
+  text-anchor: middle;
+  pointer-events: none;
+}
+.zone-text-sublabel {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 8px;
+  fill: var(--muted);
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* ── Pedestrian corridors/edges ── */
 .ped-edge {
-  stroke-width: 1.8;
-  vector-effect: non-scaling-stroke;
   stroke-linecap: round;
-  opacity: .85;
+  transition: stroke 0.2s var(--ease), stroke-width 0.2s var(--ease);
 }
-.ped-edge.edge-safe         { stroke: var(--safe);         stroke-dasharray: none }
-.ped-edge.edge-monitor      { stroke: var(--monitor);      stroke-dasharray: none }
-.ped-edge.edge-intervention { stroke: var(--intervention); stroke-dasharray: none }
-.ped-edge.edge-critical     { stroke: var(--critical);     stroke-dasharray: none }
-.ped-edge.inaccessible      { stroke-dasharray: 3 3; opacity: .5 }
-.ped-edge.route-path        { stroke-width: 3; filter: drop-shadow(0 0 4px currentColor); opacity: 1 }
+.ped-edge.edge-normal {
+  stroke: #2A2A32;
+}
+.ped-edge.inaccessible {
+  stroke-dasharray: 4 4;
+  opacity: 0.45;
+}
+.ped-edge.route-path {
+  stroke: var(--red);
+  filter: drop-shadow(0 0 6px var(--red));
+  opacity: 1;
+}
 
-/* ── Hot alert line ── */
-.map-inner line.hot { stroke: var(--red); stroke-width: 2; stroke-dasharray: 5 3; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 5px #e4002baa) }
-/* ── Start/Finish line ── */
-.start-finish-line { stroke: #e4002b; stroke-width: 1.5; vector-effect: non-scaling-stroke }
-.sf-label { fill: var(--red) !important; font-size: 2.5px !important }
-.map-label { left: 17px; color: #787883; font-size: 9px; letter-spacing: .1em; font-family: 'Titillium Web', sans-serif }
-.map-label.top { top: 16px }
-.map-label.bottom { bottom: 16px }
-.map-label b { color: #e0e0e4; font-weight: 500; margin-left: 8px }
-.map-label.top b { color: var(--safe); font-size: 8px }
+/* ── Hot alert line pointing to card ── */
+.map-inner line.hot {
+  stroke: var(--red);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+  filter: drop-shadow(0 0 4px var(--red));
+}
+
 .marker {
   z-index: 3; background: transparent; padding: 0;
   transform: translate(-50%, -50%);

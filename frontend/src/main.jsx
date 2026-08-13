@@ -13,9 +13,12 @@ import {
   ChevronRight,
   CircleHelp,
   Crosshair,
+  DoorClosed,
+  DoorOpen,
   Gauge,
   GitBranch,
   Info,
+  LogOut,
   MapPin,
   Pause,
   Play,
@@ -24,6 +27,7 @@ import {
   Route,
   ShieldCheck,
   Siren,
+  Store,
   TriangleAlert,
   Users,
   Wifi,
@@ -99,6 +103,24 @@ function clock(seconds) {
 
 // ── Main App ───────────────────────────────────────────────────────────────────
 function App() {
+  const TIER_COLORS = {
+    safe: "#2ECC71",
+    monitor: "#F5C518",
+    intervention: "#FF8C42",
+    critical: "#FF3B30"
+  };
+
+  const getZoneIcon = (type, zoneId) => {
+    if (type === "gate") {
+      const isClosed = zoneId === "gate_8_k1_k3" && shock === "gate_8_closure";
+      return isClosed ? DoorClosed : DoorOpen;
+    }
+    if (type === "exit") return LogOut;
+    if (type === "concession") return Store;
+    if (type === "field") return Users;
+    return Route;
+  };
+
   const [tick, setTick] = useState(0);
   const [running, setRunning] = useState(true);
   const [shock, setShock] = useState(null);
@@ -346,28 +368,53 @@ function App() {
 
           <div className="twin" data-tour="twin">
             <div className="map-inner">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+              <svg viewBox="0 0 1000 571" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                  {zones.map((z) => (
+                    <radialGradient
+                      key={`glow-grad-${z.zone_id}`}
+                      id={`glow-grad-${z.zone_id}`}
+                      cx="50%" cy="50%" r="50%"
+                    >
+                      <stop offset="0%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity={z.density_norm * 0.75} />
+                      <stop offset="50%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity={z.density_norm * 0.3} />
+                      <stop offset="100%" stopColor={TIER_COLORS[z.risk_tier]} stopOpacity="0" />
+                    </radialGradient>
+                  ))}
+                </defs>
 
-                {/* ── Pedestrian edges from venue_layout.json ── */}
+                {/* ── Dynamic Heatmap Glows ── */}
+                {zones.map((z) => {
+                  const cx = z.map_x * 10;
+                  const cy = z.map_y * 5.71;
+                  const glowSize = 25 + z.density_norm * 70;
+                  return (
+                    <circle
+                      key={`glow-${z.zone_id}`}
+                      cx={cx}
+                      cy={cy}
+                      r={glowSize}
+                      fill={`url(#glow-grad-${z.zone_id})`}
+                      className="heatmap-glow"
+                    />
+                  );
+                })}
+
+                {/* ── Pedestrian edges (corridors) ── */}
                 {data.layout?.edges?.map((e, i) => {
                   const from = zones.find((z) => z.zone_id === e.from);
                   const to   = zones.find((z) => z.zone_id === e.to);
                   if (!from || !to) return null;
-                  // Color edge by avg risk of its two endpoints
-                  const avgRisk = ((from.risk_score || 0) + (to.risk_score || 0)) / 2;
-                  const edgeTone = avgRisk > 80 ? "edge-critical"
-                                 : avgRisk > 60 ? "edge-intervention"
-                                 : avgRisk > 30 ? "edge-monitor"
-                                 : "edge-safe";
                   const isHotPath =
                     (route?.recommended_path || []).includes(e.from) &&
                     (route?.recommended_path || []).includes(e.to);
                   return (
                     <line
                       key={i}
-                      x1={from.map_x} y1={from.map_y}
-                      x2={to.map_x}   y2={to.map_y}
-                      className={`ped-edge ${edgeTone} ${isHotPath ? "route-path" : ""} ${e.accessible === false ? "inaccessible" : ""}`}
+                      x1={from.map_x * 10} y1={from.map_y * 5.71}
+                      x2={to.map_x * 10}   y2={to.map_y * 5.71}
+                      className={`ped-edge ${isHotPath ? "route-path" : "edge-normal"} ${e.accessible === false ? "inaccessible" : ""}`}
+                      strokeWidth={e.width_m ? e.width_m * 0.8 : 2}
                     />
                   );
                 })}
@@ -376,28 +423,180 @@ function App() {
                 {highest && highest.zone_id !== "fontvieille_egress" && (
                   <line
                     className="hot"
-                    x1={highest.map_x} y1={highest.map_y}
-                    x2="68" y2="87"
+                    x1={highest.map_x * 10} y1={highest.map_y * 5.71}
+                    x2={68 * 10} y2={87 * 5.71}
                   />
                 )}
 
-              </svg>
+                {/* ── Zone Nodes (Geometric shapes, badges, labels) ── */}
+                {zones.map((z) => {
+                  const cx = z.map_x * 10;
+                  const cy = z.map_y * 5.71;
+                  const IconComponent = getZoneIcon(z.zone_type, z.zone_id);
+                  const isSelected = selectedId === z.zone_id;
+                  const riskColor = TIER_COLORS[z.risk_tier];
+                  const shapeFill = riskColor + "20"; // 12% opacity tint
+                  const shapeStroke = isSelected ? riskColor : "#2A2A32";
 
-              {/* ── Zone Markers ── */}
-              {zones.map((z) => (
-                <button
-                  key={z.zone_id}
-                  onClick={() => setSelectedId(z.zone_id)}
-                  data-tour={z.zone_id === selectedId ? "zone" : undefined}
-                  className={`marker ${z.risk_tier} ${selectedId === z.zone_id ? "picked" : ""}`}
-                  style={{ left: `${z.map_x}%`, top: `${z.map_y}%` }}
-                  aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
-                >
-                  <span className="halo" />
-                  <b>{z.risk_score}</b>
-                  <label>{z.zone_name.split(" - ")[0]}</label>
-                </button>
-              ))}
+                  let shapeElement = null;
+                  if (z.zone_type === "gate") {
+                    shapeElement = (
+                      <rect
+                        x={cx - 21}
+                        y={cy - 21}
+                        width={42}
+                        height={42}
+                        rx={6}
+                        ry={6}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "corridor") {
+                    shapeElement = (
+                      <rect
+                        x={cx - 28}
+                        y={cy - 16}
+                        width={56}
+                        height={32}
+                        rx={16}
+                        ry={16}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "concession") {
+                    shapeElement = (
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={21}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else if (z.zone_type === "exit") {
+                    const pts = [
+                      `${cx + 22},${cy}`,
+                      `${cx + 11},${cy - 19}`,
+                      `${cx - 11},${cy - 19}`,
+                      `${cx - 22},${cy}`,
+                      `${cx - 11},${cy + 19}`,
+                      `${cx + 11},${cy + 19}`
+                    ].join(" ");
+                    shapeElement = (
+                      <polygon
+                        points={pts}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  } else {
+                    const pts = `${cx},${cy - 22} ${cx + 22},${cy} ${cx},${cy + 22} ${cx - 22},${cy}`;
+                    shapeElement = (
+                      <polygon
+                        points={pts}
+                        fill={shapeFill}
+                        stroke={shapeStroke}
+                        strokeWidth={isSelected ? 2.5 : 1.5}
+                        className="zone-shape"
+                      />
+                    );
+                  }
+
+                  return (
+                    <g
+                      key={z.zone_id}
+                      onClick={() => setSelectedId(z.zone_id)}
+                      className={`zone-group ${isSelected ? "picked" : ""}`}
+                      data-tour={isSelected ? "zone" : undefined}
+                    >
+                      {/* Active selection rotating dashed ring */}
+                      {isSelected && (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={28}
+                          fill="none"
+                          stroke={riskColor}
+                          strokeWidth={1.2}
+                          strokeDasharray="4 2"
+                          pointerEvents="none"
+                          style={{ pointerEvents: "none" }}
+                        >
+                          <animateTransform
+                            attributeName="transform"
+                            type="rotate"
+                            from={`0 ${cx} ${cy}`}
+                            to={`360 ${cx} ${cy}`}
+                            dur="10s"
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                      )}
+
+                      {/* Geometric Node Shape */}
+                      {shapeElement}
+
+                      <foreignObject
+                        x={cx - 10}
+                        y={cy - 10}
+                        width={20}
+                        height={20}
+                        pointerEvents="none"
+                        style={{ pointerEvents: "none" }}
+                      >
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "100%",
+                          height: "100%",
+                          color: riskColor,
+                          pointerEvents: "none"
+                        }}>
+                          <IconComponent size={14} strokeWidth={2.2} style={{ pointerEvents: "none" }} />
+                        </div>
+                      </foreignObject>
+
+                      {/* Tabular risk score badge in top right corner */}
+                      <g pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        <circle
+                          cx={cx + 17}
+                          cy={cy - 17}
+                          r={9}
+                          fill={riskColor}
+                          className="badge-circle"
+                        />
+                        <text
+                          x={cx + 17}
+                          y={cy - 17}
+                          className="badge-text"
+                          fill={z.risk_tier === "safe" || z.risk_tier === "monitor" ? "#0A0A0D" : "#FFFFFF"}
+                        >
+                          {z.risk_score}
+                        </text>
+                      </g>
+
+                      {/* Dynamic name labels below node */}
+                      <text x={cx} y={cy + 33} className="zone-text-label" pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        {z.zone_name.split(" - ")[0]}
+                      </text>
+                      <text x={cx} y={cy + 43} className="zone-text-sublabel" pointerEvents="none" style={{ pointerEvents: "none" }}>
+                        {z.zone_type.toUpperCase()}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
             </div>
           </div>
 
