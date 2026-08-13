@@ -273,6 +273,32 @@ svg { width: 16px; height: 16px; stroke-width: 1.8 }
   border: 1px solid currentColor; border-radius: 50%;
   opacity: .26; animation: drift 3s infinite ease-in-out;
 }
+.marker .persona-badge {
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 12px;
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px #0008;
+  z-index: 5;
+}
+
+/* Persona legend and counts layout */
+.persona-legend { display: flex; align-items: center }
+.persona-legend-items { display: flex; gap: 8px; align-items: center; max-width: 200px; flex-wrap: wrap }
+.persona-legend-item { display: flex; gap: 6px; align-items: center; color: #9b9b9f; font-size: 11px }
+.persona-swatch { width: 10px; height: 10px; border-radius: 10px; display: inline-block; border: 1px solid #00000022 }
+.persona-label { display: inline-block; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+
+.persona-counts-inner { display: flex; gap: 10px; flex-wrap: wrap }
+.persona-count-item { display: flex; gap: 6px; align-items: center; color: #9b9b9f; font-size: 11px }
+.persona-count-number { display: inline-block; min-width: 16px; text-align: right }
+
+/* Ensure persona controls don't overflow rail */
+.rail .personas { overflow: visible }
+.rail .personas .persona-legend-items, .rail .personas .persona-counts-inner { max-width: 180px }
 .marker b {
   width: 25px; height: 25px;
   display: grid; place-items: center;

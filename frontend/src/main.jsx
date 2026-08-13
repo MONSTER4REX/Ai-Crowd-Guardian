@@ -108,11 +108,27 @@ function App() {
   const [emergency, setEmergency] = useState(false);
   const [emergencyData, setEmergencyData] = useState(null);
   const [accessibleOnly, setAccessibleOnly] = useState(false);
+  const [showPersonas, setShowPersonas] = useState(true);
   const [scenarios, setScenarios] = useState([]);
   const [activePreset, setActivePreset] = useState("baseline");
   const [cmdQuery, setCmdQuery] = useState("");
   const [cmdResult, setCmdResult] = useState("");
   const [cmdLoading, setCmdLoading] = useState(false);
+
+  // ── Persona definitions (Feature 11) ──
+  const personaList = [
+    { id: "general", label: "General", color: "#2ECC71" },
+    { id: "fan", label: "Fan Zone", color: "#F5C518" },
+    { id: "vip", label: "VIP / Hospitality", color: "#9B59B6" },
+    { id: "family", label: "Family", color: "#3498DB" },
+    { id: "operations", label: "Staff / Ops", color: "#E67E22" },
+  ];
+
+  const getPersonaForZone = (z) => {
+    const seed = (z.zone_id || "").split("").reduce((a, b) => a + b.charCodeAt(0), 0);
+    const idx = Math.abs((seed + Math.round((z.density_norm || 0) * 100) + tick) % personaList.length);
+    return personaList[idx];
+  };
   const [log, setLog] = useState([
     { time: "12:41:20", kind: "resolved", title: "Risk reduced 82 → 54", body: "Route recommendation accepted at Port Hercule." },
     { time: "12:41:12", kind: "route",    title: "Safest route optimized", body: "Fontvieille path reduces exposure by 63%." },
@@ -184,17 +200,22 @@ function App() {
   }, [tick]);
 
   // ── Telemetry Commander ──
-  const handleCommand = async (e) => {
-    if (e.key !== "Enter" || !cmdQuery.trim()) return;
+  const runCommand = async (q) => {
+    setCmdQuery(q);
     setCmdLoading(true);
     try {
-      const r = await postCommander(cmdQuery, tick, shock);
+      const r = await postCommander(q, tick, shock);
       setCmdResult(r.answer);
     } catch {
       setCmdResult("Commander unavailable — check backend connection.");
     } finally {
       setCmdLoading(false);
     }
+  };
+
+  const handleCommand = async (e) => {
+    if (e.key !== "Enter" || !cmdQuery.trim()) return;
+    runCommand(cmdQuery);
   };
 
   // ── Inject shock ──
@@ -305,6 +326,44 @@ function App() {
             ))}
           </section>
 
+          {/* ── Persona Visuals ── */}
+          <section className="personas" style={{ marginTop: 14 }}>
+            <span className="eyebrow">PERSONA VISUALS</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 6 }}>
+              <label className="accessible-toggle" style={{ fontSize: 11 }}>
+                <input type="checkbox" checked={showPersonas} onChange={(e) => setShowPersonas(e.target.checked)} />
+                Show personas
+              </label>
+              <div className="persona-legend-items">
+                {personaList.map((p) => (
+                  <div key={p.id} className="persona-legend-item">
+                    <span className="persona-swatch" style={{ background: p.color }} />
+                    <small className="persona-label">{p.label}</small>
+                  </div>
+                ))}
+              </div>
+              <div className="persona-counts" aria-hidden style={{ marginTop: 4 }}>
+                {(function () {
+                  const map = {};
+                  zones?.forEach((z) => {
+                    const p = getPersonaForZone(z).id;
+                    map[p] = (map[p] || 0) + 1;
+                  });
+                  return (
+                    <div className="persona-counts-inner">
+                      {personaList.map((p) => (
+                        <div key={p.id} className="persona-count-item">
+                          <span className="persona-swatch" style={{ background: p.color }} />
+                          <small className="persona-count-number">{map[p.id] || 0}</small>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </section>
+
           {/* ── Telemetry Commander ── */}
           <section className="commander-section" data-tour="commander">
             <span className="eyebrow">💬 TELEMETRY COMMANDER</span>
@@ -324,6 +383,29 @@ function App() {
                 {cmdResult}
               </div>
             )}
+            <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+              {[
+                { q: "highest risk area?", label: "Highest risk" },
+                { q: "why is Port Hercule at risk?", label: "Why Port Hercule?" },
+                { q: "safest route from highest risk?", label: "Safest route" },
+              ].map((c) => (
+                <button
+                  key={c.q}
+                  onClick={() => runCommand(c.q)}
+                  style={{
+                    background: "#15151a",
+                    border: "1px solid var(--line)",
+                    padding: "4px 7px",
+                    fontSize: 10,
+                    color: "#9f9fa8",
+                    borderRadius: 3,
+                    cursor: "pointer",
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
           </section>
 
           <footer>● NO LIVE CAMERAS · SYNTHETIC INPUT</footer>
@@ -430,6 +512,10 @@ function App() {
                 aria-label={`${z.zone_name}: ${z.risk_tier}, risk ${z.risk_score}`}
               >
                 <span className="halo" />
+                {showPersonas && (() => {
+                  const p = getPersonaForZone(z);
+                  return <span className="persona-badge" style={{ background: p.color }} title={p.label} />;
+                })()}
                 <b>{z.risk_score}</b>
                 <label>{z.zone_name.split(" - ")[0].split(" ").slice(0, 2).join(" ")}</label>
               </button>
