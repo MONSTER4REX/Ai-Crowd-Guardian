@@ -191,5 +191,3 @@ This project was built collaboratively:
 MIT — see [LICENSE](LICENSE) for details (if applicable).
 
 ---
-
-*Built with ❤️ for the AI Crowd Guardian hackathon project.*
